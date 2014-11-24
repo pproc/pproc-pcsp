@@ -1,49 +1,42 @@
 package es.danielrusa.TFG_crawler;
-import java.util.HashMap;
 
+import java.util.HashMap;
+import java.util.Map;
 
 public class Estadisticas {
 
-	private int paginasVisitadas;
-	private int enlacesCapturados;
-	
-	HashMap<String,String> xml = new HashMap<String,String>();  // Enlace XML y contenido XML
+	private int paginasVisitadas = 0;
+	private int enlacesCapturados = 0;
+
+	// XML link and content
+	private Map<String, String> xml = new HashMap<String, String>();
 
 	public int getPaginasVisitadas() {
 		return paginasVisitadas;
-	}
-
-	public void setPaginasVisitadas(int paginasVisitadas) {
-		this.paginasVisitadas = paginasVisitadas;
 	}
 
 	public int getEnlacesCapturados() {
 		return enlacesCapturados;
 	}
 
-	public void setEnlacesCapturados(int enlacesCapturados) {
-		this.enlacesCapturados = enlacesCapturados;
-	}
-
-	public HashMap<String, String> getXml() {
+	public Map<String, String> getXml() {
 		return xml;
 	}
 
-	public void setXml(HashMap<String, String> xml) {
+	public void setXml(Map<String, String> xml) {
 		this.xml = xml;
 	}
-	
-	
-	public int incrementarPaginasVisitadas(){
-		return ++paginasVisitadas;
+
+	public void incrementarPaginasVisitadas() {
+		paginasVisitadas++;
 	}
-	
-	public int incrementarEnlacesCapturados(){
-		return ++enlacesCapturados;
+
+	public void incrementarEnlacesCapturados() {
+		enlacesCapturados++;
 	}
-	
-	public void añadirEnlace(String link,String descripcion){
+
+	public void añadirEnlace(String link, String descripcion) {
 		this.xml.put(link, descripcion);
 	}
-	
+
 }

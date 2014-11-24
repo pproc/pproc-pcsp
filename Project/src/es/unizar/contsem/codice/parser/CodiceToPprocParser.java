@@ -13,6 +13,7 @@ import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.hp.hpl.jena.vocabulary.RDF;
 
+import es.unizar.contsem.vocabulary.GR;
 import es.unizar.contsem.vocabulary.ORG;
 import es.unizar.contsem.vocabulary.PC;
 import es.unizar.contsem.vocabulary.PPROC;
@@ -33,7 +34,6 @@ public class CodiceToPprocParser {
 	public static void parseCodiceXML(Model model, Document document) {
 
 		String altString = null, altString2 = null;
-		Resource altResource = null;
 		Element altElement = null;
 
 		// pproc:Contract rdf:type (1)
@@ -233,36 +233,112 @@ public class CodiceToPprocParser {
 		}
 
 		// pproc:Contract pproc:contractTemporalConditions
-		Resource ctcInstance = model.createResource(contractInstanceURI + "/ContractTemporalConditions");
-		ctcInstance.addProperty(RDF.type, PPROC.ContractTemporalConditions);
-		contractInstance.addProperty(PPROC.contractTemporalConditions, ctcInstance);
+		if (document.getRootElement().element("ProcurementProject").element("PlannedPeriod") != null) {
+			Resource ctcInstance = model.createResource(contractInstanceURI + "/ContractTemporalConditions");
+			ctcInstance.addProperty(RDF.type, PPROC.ContractTemporalConditions);
+			contractInstance.addProperty(PPROC.contractTemporalConditions, ctcInstance);
 
-		// pproc:ContractTemporalConditions pproc:estimatedDuration
-		if ((altString = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
-				.elementText("DurationMeasure")) != null
-				&& (altString2 = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
-						.element("DurationMeasure").attributeValue("unitCode")) != null) {
-			switch (altString2) {
-			case "DAY":
-				ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "D");
-				break;
-			case "MON":
-				ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "M");
-				break;
-			case "ANN":
-				ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
-				break;
+			// pproc:ContractTemporalConditions pproc:estimatedDuration
+			if ((altString = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
+					.elementText("DurationMeasure")) != null
+					&& (altString2 = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
+							.element("DurationMeasure").attributeValue("unitCode")) != null) {
+				switch (altString2) {
+				case "DAY":
+					ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "D");
+					break;
+				case "MON":
+					ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "M");
+					break;
+				case "ANN":
+					ctcInstance.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
+					break;
+				}
+			}
+
+			// TODO pproc:ContractTemporalConditions pproc:estimatedEndDate
+			// (falta
+			// mirar como es udt:DateType)
+
+		}
+
+		// pproc:Contract pproc:contractEconomicConditions (1)
+		if (document.getRootElement().element("ProcurementProject").element("BudgetAmount") != null) {
+			Resource cecInstance = model.createResource(contractInstanceURI + "/ContractEconomicConditions");
+			cecInstance.addProperty(RDF.type, PPROC.ContractEconomicConditions);
+			contractInstance.addProperty(PPROC.contractEconomicConditions, cecInstance);
+
+			// pproc:ContractEconomicConditions pproc:estimatedValue
+			if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+					.elementText("EstimatedOverallContractAmount")) != null) {
+				Resource priceResource = model.createResource(contractInstanceURI
+						+ "/ContractEconomicConditions/EstimatedValue");
+				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
+				priceResource.addProperty(GR.hasCurrencyValue, altString);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+						.element("EstimatedOverallContractAmount").attributeValue("currencyID")) != null)
+					priceResource.addProperty(GR.hasCurrency, altString);
+				cecInstance.addProperty(PPROC.estimatedValue, priceResource);
+			}
+
+			// pproc:ContractEconomicConditions pproc:budgetPrice (1)
+			if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+					.elementText("TotalAmount")) != null) {
+				Resource priceResource = model.createResource(contractInstanceURI
+						+ "/ContractEconomicConditions/TotalAmount");
+				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
+				priceResource.addProperty(GR.hasCurrencyValue, altString);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+						.element("TotalAmount").attributeValue("currencyID")) != null)
+					priceResource.addProperty(GR.hasCurrency, altString);
+				cecInstance.addProperty(PPROC.budgetPrice, priceResource);
+			}
+
+			// pproc:ContractEconomicConditions pproc:budgetPrice (2)
+			if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+					.elementText("TaxExclusiveAmount")) != null) {
+				Resource priceResource = model.createResource(contractInstanceURI
+						+ "/ContractEconomicConditions/TaxExclusiveAmount");
+				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
+				priceResource.addProperty(GR.hasCurrencyValue, altString);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "false");
+				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
+						.element("TaxExclusiveAmount").attributeValue("currencyID")) != null)
+					priceResource.addProperty(GR.hasCurrency, altString);
+				cecInstance.addProperty(PPROC.budgetPrice, priceResource);
 			}
 		}
+
+		// pproc:Contract pproc:contractEconomicConditions (2)
+		if (document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount") != null) {
+			Resource cecInstance = model.createResource(contractInstanceURI + "/ContractEconomicConditions");
+			cecInstance.addProperty(RDF.type, PPROC.ContractEconomicConditions);
+			contractInstance.addProperty(PPROC.contractEconomicConditions, cecInstance);
+
+			// pproc:ContractEconomicConditions pproc:feePrice
+			if ((altString = document.getRootElement().element("ProcurementProject").elementText("RequiredFeeAmount")) != null) {
+				Resource priceResource = model.createResource(contractInstanceURI
+						+ "/ContractEconomicConditions/EstimatedValue");
+				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
+				priceResource.addProperty(GR.hasCurrencyValue, altString);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				if ((altString = document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount")
+						.attributeValue("currencyID")) != null)
+					priceResource.addProperty(GR.hasCurrency, altString);
+				cecInstance.addProperty(PPROC.feePrice, priceResource);
+			}
+
+		}
 		
-		// TODO pproc:ContractTemporalConditions pproc:estimatedEndDate (falta mirar como es udt:DateType)
+		// 
 		
-		// pproc:Contract pproc:contractEconomicConditions
-		
+		//
 
 		model.write(System.out, "Turtle");
 	}
-	
+
 	// TODO añadir los datatype a las propiedades data
 
 }

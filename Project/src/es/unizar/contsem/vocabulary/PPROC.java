@@ -4,7 +4,6 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.vocabulary.RDF;
 
 public class PPROC {
 
@@ -39,10 +38,16 @@ public class PPROC {
 	public static final Resource RentContract = resource("RentContract");
 	public static final Resource BuyContract = resource("BuyContract");
 	public static final Resource ContractTemporalConditions = resource("ContractTemporalConditions");
+	public static final Resource ContractEconomicConditions = resource("ContractEconomicConditions");
+	public static final Resource BundlePriceSpecification = resource("BundlePriceSpecification");
 
 	public static final Property delegatingAuthority = property("delegatingAuthority");
 	public static final Property contractTemporalConditions = property("contractTemporalConditions");
 	public static final Property estimatedDuration = property("estimatedDuration");
+	public static final Property contractEconomicConditions = property("contractEconomicConditions");
+	public static final Property estimatedValue = property("estimatedValue");
+	public static final Property budgetPrice = property("budgetPrice");
+	public static final Property feePrice = property("feePrice");
 
 	/**
 	 * The same items of vocabulary, but at the Node level, parked inside a
@@ -62,10 +67,15 @@ public class PPROC {
 		public static final Node RentContract = PPROC.RentContract.asNode();
 		public static final Node BuyContract = PPROC.BuyContract.asNode();
 		public static final Node ContractTemporalConditions = PPROC.ContractTemporalConditions.asNode();
+		public static final Node ContractEconomicConditions = PPROC.ContractEconomicConditions.asNode();
+		public static final Node BundlePriceSpecification = PPROC.BundlePriceSpecification.asNode();
 
 		public static final Node delegatingAuthority = PPROC.delegatingAuthority.asNode();
 		public static final Node contractTemporalConditions = PPROC.contractTemporalConditions.asNode();
 		public static final Node estimatedDuration = PPROC.estimatedDuration.asNode();
+		public static final Node contractEconomicConditions = PPROC.contractEconomicConditions.asNode();
+		public static final Node estimatedValue = PPROC.estimatedValue.asNode();
+		public static final Node budgetPrice = PPROC.budgetPrice.asNode();
 	}
 
 }

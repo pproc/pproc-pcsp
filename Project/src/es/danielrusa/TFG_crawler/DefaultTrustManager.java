@@ -1,7 +1,5 @@
 package es.danielrusa.TFG_crawler;
 
-
-
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -15,34 +13,34 @@ import javax.net.ssl.X509TrustManager;
 
 public class DefaultTrustManager implements X509TrustManager {
 
-    @Override
-    public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-    }
+	@Override
+	public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+	}
 
-    @Override
-    public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-    }
+	@Override
+	public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+	}
 
-    @Override
-    public X509Certificate[] getAcceptedIssuers() {
-        return null;
-    }
-    
-	public static void CrearConexionHTTPS(){
+	@Override
+	public X509Certificate[] getAcceptedIssuers() {
+		return null;
+	}
+
+	public static void CrearConexionHTTPS() {
 		SSLContext ctx = null;
 		try {
 			ctx = SSLContext.getInstance("TLS");
 		} catch (NoSuchAlgorithmException e1) {
-			// TODO Auto-generated catch block
+			System.out.printf("\n%s - ERROR error en CrearConexionHTTPS", ExtraerLicitaciones.getNow());
 			e1.printStackTrace();
 		}
 		try {
 			ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
 		} catch (KeyManagementException e) {
-			// TODO Auto-generated catch block
+			System.out.printf("\n%s - ERROR error en CrearConexionHTTPS", ExtraerLicitaciones.getNow());
 			e.printStackTrace();
 		}
-		SSLContext.setDefault(ctx);}
-
+		SSLContext.setDefault(ctx);
+	}
 
 }

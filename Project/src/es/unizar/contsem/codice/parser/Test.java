@@ -22,6 +22,7 @@ public class Test {
 		Document document = reader.read(new ByteArrayInputStream(firstXML
 				.getBytes(StandardCharsets.UTF_8)));
 
+		// System.out.println(document.asXML());
 		Model model = ModelFactory.createDefaultModel();
 		CodiceToPprocParser.parseCodiceXML(model, document);
 
