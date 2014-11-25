@@ -1,6 +1,7 @@
 package es.unizar.contsem.codice.parser;
 
 import java.io.ByteArrayInputStream;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
 import org.dom4j.Document;
@@ -22,7 +23,10 @@ public class Test {
 		Document document = reader.read(new ByteArrayInputStream(firstXML
 				.getBytes(StandardCharsets.UTF_8)));
 
-		// System.out.println(document.asXML());
+		PrintWriter writer = new PrintWriter("codice_doc.xml", "UTF-8");
+		writer.print(document.asXML());
+		writer.close();
+		
 		Model model = ModelFactory.createDefaultModel();
 		CodiceToPprocParser.parseCodiceXML(model, document);
 

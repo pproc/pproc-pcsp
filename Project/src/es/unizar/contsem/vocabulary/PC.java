@@ -1,6 +1,5 @@
 package es.unizar.contsem.vocabulary;
 
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
@@ -26,18 +25,13 @@ public class PC {
 		return ResourceFactory.createProperty(uri, local);
 	}
 
-	public static final Resource Alt = resource("Alt");
+	public static final Resource AwardCriteriaCombination = resource("AwardCriteriaCombination");
+	public static final Resource AwardCriterion = resource("AwardCriterion");
 
 	public static final Property contractingAuthority = property("contractingAuthority");
-
-	/**
-	 * The same items of vocabulary, but at the Node level, parked inside a
-	 * nested class so that there's a simple way to refer to them.
-	 */
-	@SuppressWarnings("hiding")
-	public static final class Nodes {
-		public static final Node Alt = PC.Alt.asNode();
-		public static final Node contractingAuthority = PC.contractingAuthority.asNode();
-	}
+	public static final Property awardCriteriaCombination = property("awardCriteriaCombination");
+	public static final Property awardCriterion = property("awardCriterion");
+	public static final Property criterionName = property("criterionName");
+	public static final Property criterionWeight = property("criterionWeight");
 
 }

@@ -1,6 +1,5 @@
 package es.unizar.contsem.vocabulary;
 
-import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
@@ -40,6 +39,28 @@ public class PPROC {
 	public static final Resource ContractTemporalConditions = resource("ContractTemporalConditions");
 	public static final Resource ContractEconomicConditions = resource("ContractEconomicConditions");
 	public static final Resource BundlePriceSpecification = resource("BundlePriceSpecification");
+	public static final Resource ContractProcedureSpecifications = resource("ContractProcedureSpecifications");
+	public static final Resource Regular = resource("Regular");
+	public static final Resource Express = resource("Express");
+	public static final Resource Emergency = resource("Emergency");
+	public static final Resource RegularOpen = resource("RegularOpen");
+	public static final Resource SimpleOpen = resource("SimpleOpen");
+	public static final Resource Restricted = resource("Restricted");
+	public static final Resource Negotiated = resource("Negotiated");
+	public static final Resource Minor = resource("Minor");
+	public static final Resource CompetitiveDialogue = resource("CompetitiveDialogue");
+	public static final Resource NegotiatedWithoutPublicity = resource("NegotiatedWithoutPublicity");
+	public static final Resource NegotiatedWithPublicity = resource("NegotiatedWithPublicity");
+	public static final Resource FrameworkConclusionContract = resource("FrameworkConclusionContract");
+	public static final Resource DynamicPurchasingSystemConclusionContract = resource("DynamicPurchasingSystemConclusionContract");
+	public static final Resource FrameworkDerivativeContract = resource("FrameworkDerivativeContract");
+	public static final Resource DynamicPurchasingSystemDerivativeContract = resource("DynamicPurchasingSystemDerivativeContract");
+	public static final Resource FrameworkAgreement = resource("FrameworkAgreement");
+	public static final Resource ContractObject = resource("ContractObject");
+	public static final Resource TenderersRequirements = resource("TenderersRequirements");
+	public static final Resource SubjectiveAwardCriterion = resource("SubjectiveAwardCriterion");
+	public static final Resource ObjectiveAwardCriterion = resource("ObjectiveAwardCriterion");
+	public static final Resource ContractAdditionalObligations = resource("ContractAdditionalObligations");
 
 	public static final Property delegatingAuthority = property("delegatingAuthority");
 	public static final Property contractTemporalConditions = property("contractTemporalConditions");
@@ -48,34 +69,28 @@ public class PPROC {
 	public static final Property estimatedValue = property("estimatedValue");
 	public static final Property budgetPrice = property("budgetPrice");
 	public static final Property feePrice = property("feePrice");
-
-	/**
-	 * The same items of vocabulary, but at the Node level, parked inside a
-	 * nested class so that there's a simple way to refer to them.
-	 */
-	@SuppressWarnings("hiding")
-	public static final class Nodes {
-		public static final Node Contract = PPROC.Contract.asNode();
-		public static final Node SuppliesContract = PPROC.SuppliesContract.asNode();
-		public static final Node ServicesContract = PPROC.ServicesContract.asNode();
-		public static final Node WorksContract = PPROC.WorksContract.asNode();
-		public static final Node PublicServicesManagementContract = PPROC.PublicServicesManagementContract.asNode();
-		public static final Node PublicWorksConcessionContract = PPROC.PublicWorksConcessionContract.asNode();
-		public static final Node PublicPrivatePartnershipContract = PPROC.PublicPrivatePartnershipContract.asNode();
-		public static final Node SpecialAdministrativeContract = PPROC.SpecialAdministrativeContract.asNode();
-		public static final Node PrivateContract = PPROC.PrivateContract.asNode();
-		public static final Node RentContract = PPROC.RentContract.asNode();
-		public static final Node BuyContract = PPROC.BuyContract.asNode();
-		public static final Node ContractTemporalConditions = PPROC.ContractTemporalConditions.asNode();
-		public static final Node ContractEconomicConditions = PPROC.ContractEconomicConditions.asNode();
-		public static final Node BundlePriceSpecification = PPROC.BundlePriceSpecification.asNode();
-
-		public static final Node delegatingAuthority = PPROC.delegatingAuthority.asNode();
-		public static final Node contractTemporalConditions = PPROC.contractTemporalConditions.asNode();
-		public static final Node estimatedDuration = PPROC.estimatedDuration.asNode();
-		public static final Node contractEconomicConditions = PPROC.contractEconomicConditions.asNode();
-		public static final Node estimatedValue = PPROC.estimatedValue.asNode();
-		public static final Node budgetPrice = PPROC.budgetPrice.asNode();
-	}
+	public static final Property contractProcedureSpecifications = property("contractProcedureSpecifications");
+	public static final Property urgencyType = property("urgencyType");
+	public static final Property procedureType = property("procedureType");
+	public static final Property frameworkAgreement = property("frameworkAgreement");
+	public static final Property estimatedEndDate = property("estimatedEndDate");
+	public static final Property maxNumberOfOperators = property("maxNumberOfOperators");
+	public static final Property minNumberOfOperators = property("minNumberOfOperators");
+	public static final Property contractObject = property("contractObject");
+	public static final Property mainObject = property("mainObject");
+	public static final Property provision = property("provision");
+	public static final Property tenderersRequirements = property("tenderersRequirements");
+	public static final Property requiredClassification = property("requiredClassification");
+	public static final Property requiredEconomicAndFinancialStanding = property("requiredEconomicAndFinancialStanding");
+	public static final Property requiredTechnicalAndProfessionalAbility = property("requiredTechnicalAndProfessionalAbility");
+	public static final Property otherAbilityRequisites = property("otherAbilityRequisites");
+	public static final Property criterionEvaluationMode = property("criterionEvaluationMode");
+	public static final Property criterionMaxAndMinScores = property("criterionMaxAndMinScores");
+	public static final Property contractAdditionalObligations = property("contractAdditionalObligations");
+	public static final Property finalFinancialGuarantee = property("finalFinancialGuarantee");
+	public static final Property finalFinancialGuaranteeDuration = property("finalFinancialGuaranteeDuration");
+	public static final Property provisionalFinancialGuarantee = property("provisionalFinancialGuarantee");
+	public static final Property otherGuarantee = property("otherGuarantee");
+	public static final Property advertisementAmount = property("advertisementAmount");
 
 }
