@@ -38,6 +38,7 @@ public class S {
 		public static final Property telephone = property("telephone");
 		public static final Property faxNumber = property("faxNumber");
 		public static final Property email = property("email");
+		public static final Property location = property("location");
 		
 
 		/**

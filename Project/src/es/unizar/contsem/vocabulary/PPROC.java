@@ -61,6 +61,7 @@ public class PPROC {
 	public static final Resource SubjectiveAwardCriterion = resource("SubjectiveAwardCriterion");
 	public static final Resource ObjectiveAwardCriterion = resource("ObjectiveAwardCriterion");
 	public static final Resource ContractAdditionalObligations = resource("ContractAdditionalObligations");
+	public static final Resource InformationProvider = resource("InformationProvider");
 
 	public static final Property delegatingAuthority = property("delegatingAuthority");
 	public static final Property contractTemporalConditions = property("contractTemporalConditions");
@@ -92,5 +93,6 @@ public class PPROC {
 	public static final Property provisionalFinancialGuarantee = property("provisionalFinancialGuarantee");
 	public static final Property otherGuarantee = property("otherGuarantee");
 	public static final Property advertisementAmount = property("advertisementAmount");
+	public static final Property tenderInformationProvider = property("tenderInformationProvider");
 
 }

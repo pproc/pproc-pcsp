@@ -125,11 +125,11 @@ public class CodiceToPprocParser {
 				organizationResource.addProperty(DCTerms.identifier, altString2);
 
 			// org:Organization org:hasSite
-			Resource placeResource = model.createResource(organizationResourceURI + "/Site");
+			Resource placeResource = model.createResource(organizationResourceURI + "/Place");
 			placeResource.addProperty(RDF.type, S.Place);
 			organizationResource.addProperty(ORG.hasSite, placeResource);
 
-			// s:address s:PostalAddress
+			// s:Place s:address
 			Resource postalAddressResource = model.createResource(organizationResourceURI + "/PostalAddress");
 			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 			placeResource.addProperty(S.address, postalAddressResource);
@@ -193,7 +193,7 @@ public class CodiceToPprocParser {
 					organizationResource.addProperty(DCTerms.identifier, altString2);
 
 				// org:Organization org:hasSite
-				Resource placeResource = model.createResource(organizationResourceURI + "/Site");
+				Resource placeResource = model.createResource(organizationResourceURI + "/Place");
 				placeResource.addProperty(RDF.type, S.Place);
 				organizationResource.addProperty(ORG.hasSite, placeResource);
 
@@ -659,13 +659,13 @@ public class CodiceToPprocParser {
 			contractResource.addProperty(PC.awardCriteriaCombination, criteriaCombinationResource);
 		}
 
-		// pproc:Contract pproc:contractAddionalObligations
+		// pproc:ContractProcedureSpecifications pproc:contractAddionalObligations
 		if (document.getRootElement().element("TenderingTerms") != null) {
 			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
 			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			Resource addionalObligationsResource = model.createResource(contractResourceURI
-					+ "/ContractProcedureSpecifications/ContractAdditionalObligations");
+					+ "/ContractAdditionalObligations");
 			addionalObligationsResource.addProperty(RDF.type, PPROC.ContractAdditionalObligations);
 
 			// pproc:ContractAdditionalObligations pproc:finalFinancialGuarantee
@@ -734,6 +734,84 @@ public class CodiceToPprocParser {
 
 			cpeResource.addProperty(PPROC.contractAdditionalObligations, addionalObligationsResource);
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
+		}
+
+		// pproc:ContractProcedureSpecifications pproc:tenderInformationProvider (1)
+		if (document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty") != null) {
+			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
+			Resource informationProviderResource = model.createResource(contractResourceURI
+					+ "/AdditionalInformationProvider");
+			informationProviderResource.addProperty(RDF.type, PPROC.InformationProvider);
+
+			// pproc:InformationProvider s:location
+			Resource placeResource = model.createResource(informationProviderResource + "/Place");
+			placeResource.addProperty(RDF.type, S.Place);
+			informationProviderResource.addProperty(S.location, placeResource);
+
+			// s:Place s:name
+			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PartyName").elementText("Name")) != null)
+				placeResource.addProperty(S.name, altString);
+
+			// s:Place s:address
+			Resource postalAddressResource = model.createResource(informationProviderResource + "/PostalAddress");
+			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
+			placeResource.addProperty(S.address, postalAddressResource);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PostalAddress").elementText("CityName")) != null)
+				postalAddressResource.addProperty(S.addressLocality, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PostalAddress").elementText("PostalZone")) != null)
+				postalAddressResource.addProperty(S.postalCode, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
+				postalAddressResource.addProperty(S.streetAddress, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
+				postalAddressResource.addProperty(S.addressCountry, altString);
+
+			// pproc:InformationProvider pproc:estimatedEndDate
+			if ((altElement = document.getRootElement().element("TenderingProcess")
+					.element("DocumentAvailabilityPeriod")) != null)
+				informationProviderResource.addProperty(PPROC.estimatedEndDate, altElement.elementText("EndDate"));
+
+			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
+		}
+
+		// pproc:ContractProcedureSpecifications pproc:tenderInformationProvider (2)
+		if (document.getRootElement().element("TenderingTerms").element("DocumentProviderParty") != null) {
+			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
+			Resource informationProviderResource = model.createResource(contractResourceURI + "/DocumentProviderParty");
+			informationProviderResource.addProperty(RDF.type, PPROC.InformationProvider);
+
+			// pproc:InformationProvider s:location
+			Resource placeResource = model.createResource(informationProviderResource + "/Place");
+			placeResource.addProperty(RDF.type, S.Place);
+			informationProviderResource.addProperty(S.location, placeResource);
+
+			// s:Place s:name
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PartyName").elementText("Name")) != null)
+				placeResource.addProperty(S.name, altString);
+
+			// s:Place s:address
+			Resource postalAddressResource = model.createResource(informationProviderResource + "/PostalAddress");
+			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
+			placeResource.addProperty(S.address, postalAddressResource);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").elementText("CityName")) != null)
+				postalAddressResource.addProperty(S.addressLocality, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").elementText("PostalZone")) != null)
+				postalAddressResource.addProperty(S.postalCode, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
+				postalAddressResource.addProperty(S.streetAddress, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
+				postalAddressResource.addProperty(S.addressCountry, altString);
+
+			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
 		}
 
 		//
