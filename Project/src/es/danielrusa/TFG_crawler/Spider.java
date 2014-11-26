@@ -6,8 +6,7 @@ public class Spider {
 
 		Estadisticas estadisticas = new Estadisticas();
 		Database bd = new Database();
-		String url = "https://contrataciondelestado.es/wps/portal/";
 		ExtraerLicitaciones el = new ExtraerLicitaciones();
-		el.start(bd, url, estadisticas);
+		el.start(bd, "https://contrataciondelestado.es/wps/portal/", estadisticas);
 	}
 }

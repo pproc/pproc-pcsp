@@ -17,10 +17,11 @@ public class Database {
 		super();
 		this.miConexion = getConnection();
 		if (miConexion != null)
-			System.out.printf("\n%s - Connected to database", ExtraerLicitaciones.getNow());
+			System.out.printf("\n%s - INFO Connected to database", ExtraerLicitaciones.getNow());
 	}
 
 	public void insertarLinkLicitacion(String enlace, String expediente, String xml, String post, String id) {
+		long startTime = System.currentTimeMillis();
 		String query = null;
 		try {
 			if (!xmlYaInsertado(enlace)) {
@@ -34,7 +35,7 @@ public class Database {
 			System.out.printf("\n%s - ERROR error en insertarLinkLicitacion", ExtraerLicitaciones.getNow());
 			e.printStackTrace();
 		}
-
+		System.out.printf("\n%s - DEBUG insertarLinkLicitacion tarda %f", ExtraerLicitaciones.getNow(), (double)(System.currentTimeMillis()-startTime)/1000);
 	}
 
 	private boolean xmlYaInsertado(String link) throws SQLException {
@@ -61,6 +62,7 @@ public class Database {
 	}
 
 	public boolean existeIdPlataforma(String id) throws SQLException {
+		long startTime = System.currentTimeMillis();
 		Statement stmt = null;
 		ResultSet rs = null;
 		int rowCount = -1;
@@ -76,6 +78,7 @@ public class Database {
 			rs.close();
 			stmt.close();
 		}
+		System.out.printf("\n%s - DEBUG existeIdPlataforma tarda %f", ExtraerLicitaciones.getNow(), (double)(System.currentTimeMillis()-startTime)/1000);
 		if (rowCount > 0)
 			return true;
 		else

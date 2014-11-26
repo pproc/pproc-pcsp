@@ -1,9 +1,11 @@
 package es.danielrusa.TFG_crawler;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,6 +48,7 @@ public class ExtraerLicitaciones {
 		try {
 
 			// Get to main web to get sessionIdCookie
+			System.out.printf("\n%s - INFO get to main web to get sessionIdCookie... ", ExtraerLicitaciones.getNow());
 			response = Jsoup.connect(urlPortal).ignoreContentType(true)
 					.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 					.referrer("http://www.google.com").timeout(12000).followRedirects(true).method(Method.GET)
@@ -53,8 +56,10 @@ public class ExtraerLicitaciones {
 			sessionIdCookie = response.cookies().get("JSESSIONID");
 			document = response.parse();
 			altString = buscarPatronHref(document, "Búsqueda avanzada de licitaciones");
+			System.out.printf("ok");
 
 			// Get to advanced search to get paged petition base url
+			System.out.printf("\n%s - INFO get to advanced search to get paged petition base url... ", ExtraerLicitaciones.getNow());
 			response = Jsoup.connect(altString).ignoreContentType(true)
 					.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 					.referrer(urlPortal).timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie)
@@ -68,8 +73,10 @@ public class ExtraerLicitaciones {
 					break;
 				}
 			}
+			System.out.printf("ok");
 
 			// Post to first page
+			System.out.printf("\n%s - INFO post to first page... ", ExtraerLicitaciones.getNow());
 			petition = altString.trim()
 					+ "?CpvorigenmultiplecpvMultiple=BusquedaVIS_UOE&cpvPrincipalmultiplecpvMultiple=&cpvViewmultiplecpvMultiple=%23%7BbeanCpvPpt.cpv%7D&javax.faces.ViewState=j_id1%3Aj_id2&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1=viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Abutton1=Buscar&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AcomboTipoAdminMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Acomboadmins=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AcpvMultiple%3AcodigoCpv=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfAdjuOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfAdjuOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEPubMaxMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEPubMinMAQvis2=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEPubMaxMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEPubMinMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfPresOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfPresOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AhiddenBusquedaOtrosDatos=true&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Amenu111MAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Amenu1MAQ1=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuCompraPublicaInnovadoraMAQ1=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuSubtipoMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuTipoContMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3As_detLicitacionAnulMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3As_detLicitacionMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtexoorganoMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext18MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext19MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext71ExpMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextEstimado18MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextEstimado19MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextMaxFecAnuncioMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextMinFecAnuncioMAQ2=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atextoministerio=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtipoSistemaContratacion=0";
 			post = petition;
@@ -78,6 +85,7 @@ public class ExtraerLicitaciones {
 					.timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie).method(Method.POST)
 					.execute();
 			document = response.parse();
+			System.out.printf("ok");
 			ids = getIds(document);
 			buscarLicitaciones(ids, sessionIdCookie, statistics, database);
 			statistics.incrementarPaginasVisitadas();
@@ -119,12 +127,25 @@ public class ExtraerLicitaciones {
 
 	public Document iterarPaginas(Document doc, String sessionIdCookie, Estadisticas statistics, Database database) {
 		Elements elements = doc.select("form[id]");
+		//////
+		
+		try {
+			PrintWriter writer;
+			writer = new PrintWriter("doc.html", "UTF-8");
+			writer.print(doc.html());
+			writer.close();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		//////
+		
+		
 		String form = null, petition;
 		Document document = null;
-		for (Element link : elements) {
-			if (link.attr("abs:id").contains("viewns_Z7_AVEQAI930OBRD02JPMTPG21004_:form1")) {
+		for (Element element : elements) {
+			if (element.attr("abs:id").contains("viewns_Z7_AVEQAI930OBRD02JPMTPG21004_:form1")) {
 				// Get link
-				form = new String(link.attr("abs:action"));
+				form = new String(element.attr("abs:action"));
 				break;
 			}
 		}
@@ -132,8 +153,14 @@ public class ExtraerLicitaciones {
 		for (int i = 0; pag.length > i; i++) {
 			pag[i] = pag[i].replaceAll("j_id", "");
 		}
-
-		petition = form + FORM[0] + pag[0] + FORM[1] + pag[1] + FORM[2];
+		try {
+			petition = form + FORM[0] + pag[0] + FORM[1] + pag[1] + FORM[2];
+			System.out.printf("\n%s - INFO pag[0]=%s pag[1]=%s", ExtraerLicitaciones.getNow(), pag[0], pag[1]);
+		} catch (java.lang.ArrayIndexOutOfBoundsException ex) {
+			System.out.printf("\n%s - ArrayIndexOutOfBoundsException en iterarPaginas", ExtraerLicitaciones.getNow());
+			System.out.printf("\n%s - INFO doc=%s", ExtraerLicitaciones.getNow(), doc.html());
+			return doc;
+		}
 		post = petition;
 		boolean success = false;
 		int tryCount = 0;
@@ -174,18 +201,19 @@ public class ExtraerLicitaciones {
 				try {
 					// Web de la licitación, única por licitación, puede tener
 					// varios XMLs
+					System.out.printf("\n%s - DEBUG post to get contract web %s... ", ExtraerLicitaciones.getNow(), ids[i]);
 					Response respuesta = Jsoup.connect(url + parametros).ignoreContentType(true)
 							.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 							.timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie)
 							.method(Method.POST).execute();
+					System.out.printf("ok");
 					buscarPatronHrefXml(respuesta.parse(), statistics, database, ids[i]);
-					System.out.printf(" nuevo!<%s>", ids[i]);
 				} catch (IOException e) {
 					System.out.printf("\n%s - ERROR error en buscarLicitaciones", ExtraerLicitaciones.getNow());
 					e.printStackTrace();
 				}
 			} else {
-				System.out.printf(" <%s>", ids[i]);
+				System.out.printf("\n%s - DEBUG contract web %s already exist", ExtraerLicitaciones.getNow(), ids[i]);
 			}
 		}
 	}
