@@ -1,23 +1,19 @@
 package es.danielrusa.TFG_crawler;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jsoup.Jsoup;
 import org.jsoup.Connection.Method;
 import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -59,7 +55,8 @@ public class ExtraerLicitaciones {
 			System.out.printf("ok");
 
 			// Get to advanced search to get paged petition base url
-			System.out.printf("\n%s - INFO get to advanced search to get paged petition base url... ", ExtraerLicitaciones.getNow());
+			System.out.printf("\n%s - INFO get to advanced search to get paged petition base url... ",
+					ExtraerLicitaciones.getNow());
 			response = Jsoup.connect(altString).ignoreContentType(true)
 					.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 					.referrer(urlPortal).timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie)
@@ -121,14 +118,14 @@ public class ExtraerLicitaciones {
 
 		// Printing actual state
 		double percentage = ((actualPage * (1.0)) / (finalPage * (1.0))) * 100.0;
-		System.out.printf("\n%s - [page %04d/%04d] [completed %.4f%%]", getNow(), actualPage, finalPage, percentage);
+		System.out.printf("\n%s - INFO [page %04d/%04d] [completed %.4f%%]", getNow(), actualPage, finalPage, percentage);
 		return fin;
 	}
 
 	public Document iterarPaginas(Document doc, String sessionIdCookie, Estadisticas statistics, Database database) {
 		Elements elements = doc.select("form[id]");
-		//////
-		
+		// ////
+
 		try {
 			PrintWriter writer;
 			writer = new PrintWriter("doc.html", "UTF-8");
@@ -137,9 +134,8 @@ public class ExtraerLicitaciones {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		//////
-		
-		
+		// ////
+
 		String form = null, petition;
 		Document document = null;
 		for (Element element : elements) {
@@ -155,7 +151,7 @@ public class ExtraerLicitaciones {
 		}
 		try {
 			petition = form + FORM[0] + pag[0] + FORM[1] + pag[1] + FORM[2];
-			System.out.printf("\n%s - INFO pag[0]=%s pag[1]=%s", ExtraerLicitaciones.getNow(), pag[0], pag[1]);
+			System.out.printf("\n%s - DEBUG pag[0]=%s pag[1]=%s", ExtraerLicitaciones.getNow(), pag[0], pag[1]);
 		} catch (java.lang.ArrayIndexOutOfBoundsException ex) {
 			System.out.printf("\n%s - ArrayIndexOutOfBoundsException en iterarPaginas", ExtraerLicitaciones.getNow());
 			System.out.printf("\n%s - INFO doc=%s", ExtraerLicitaciones.getNow(), doc.html());
@@ -194,14 +190,15 @@ public class ExtraerLicitaciones {
 		String url = "https://contrataciondelestado.es/wps/portal/!ut/p/b1/jY_LDoIwFES_xQ8wHfoSlqTQFoNKQkDpxrAwBsNjY_x-kcSFC6t3N8k5mbnEkWYdSREiADg5ETe2j-7a3rtpbPtXdvLM04NS2lKEJUtA86SqpJ2jETPQzAC-XIxPH-mOgdqNCVOmgOLtC6Z4va0LWWYGyKxO8ioQMFT-1-8p-OEfiVsQ34IF8L3oL6Fkb6fhQgbXax1lNx6vVk9ghp30/dl4/d5/L2dBISEvZ0FBIS9nQSEh/pw/Z7_AVEQAI930OBRD02JPMTPG21004/act/id=0/p=javax.servlet.include.path_info=QCPjspQCPbusquedaQCPMainBusqueda.jsp/254843306643/-/?";
 		String parametros = null;
 		for (int i = 0; i < ids.length; i++) {
-			if (!database.existeIdPlataforma(ids[i])) {
+			if (!database.idplataformExists(ids[i])) {
 				parametros = "ACTION_NAME_PARAM=SourceAction&CpvorigenmultiplecpvMultiple=BusquedaVIS_UOE&TIPO_LICITACION=0&cpvPrincipalmultiplecpvMultiple=&cpvViewmultiplecpvMultiple=%23%7BbeanCpvPpt.cpv%7D&idLicitacion="
 						+ ids[i].trim()
 						+ "&javax.faces.ViewState=j_id11%3Aj_id12&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1=viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AcomboTipoAdminMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Acomboadmins=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AcpvMultiple%3AcodigoCpv=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AenlaceExpediente_0=viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AenlaceExpediente_0&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfAdjuOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfAdjuOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEPubMaxMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfBOEPubMinMAQvis2=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEPubMaxMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfDOUEPubMinMAQvis=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfPresOtrosDatos1MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AfPresOtrosDatos2MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AhiddenBusquedaOtrosDatos=true&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Amenu111MAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Amenu1MAQ1=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuCompraPublicaInnovadoraMAQ1=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuSubtipoMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AmenuTipoContMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3As_detLicitacionAnulMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3As_detLicitacionMAQ=00&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtexoorganoMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext18MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext19MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atext71ExpMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextEstimado18MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextEstimado19MAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextMaxFecAnuncioMAQ=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtextMinFecAnuncioMAQ2=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3Atextoministerio=&viewns_Z7_AVEQAI930OBRD02JPMTPG21004_%3Aform1%3AtipoSistemaContratacion=0";
 				try {
 					// Web de la licitación, única por licitación, puede tener
 					// varios XMLs
-					System.out.printf("\n%s - DEBUG post to get contract web %s... ", ExtraerLicitaciones.getNow(), ids[i]);
+					System.out.printf("\n%s - DEBUG post to get contract web %s... ", ExtraerLicitaciones.getNow(),
+							ids[i]);
 					Response respuesta = Jsoup.connect(url + parametros).ignoreContentType(true)
 							.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 							.timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie)
@@ -222,12 +219,9 @@ public class ExtraerLicitaciones {
 		Elements links = d.select("a[href]");
 		String referencia = null;
 		for (Element link : links) {
-			// Capturo el Link
 			String enlace = new String(link.attr("abs:href"));
-			// Capturo la de
 			String descripcion = new String(trim(link.text(), 35));
-
-			if (descripcion.contains("Búsqueda avanzada de licitaciones"))
+			if (descripcion.contains(p))
 				referencia = enlace;
 		}
 		return referencia;
@@ -244,20 +238,20 @@ public class ExtraerLicitaciones {
 		Elements elements = document.select("a[href]");
 		ArrayList<String> encontrados = new ArrayList<>();
 		for (Element element : elements) {
-			String enlace = new String(element.attr("abs:href"));
+			String link = new String(element.attr("abs:href"));
 			String descripcion = new String(trim(element.text(), 35));
 			element.attr("");
 			if (descripcion.trim().toLowerCase().contains("xml")) {
-				encontrados.add(enlace);
-				if (!statistics.getXml().containsKey(enlace)) {
-					statistics.añadirEnlace(enlace, expediente);
+				encontrados.add(link);
+				if (!statistics.getXml().containsKey(link)) {
+					statistics.añadirEnlace(link, expediente);
 					statistics.incrementarEnlacesCapturados();
-					String xml = getXML(enlace).replaceAll("'", "''");
-					database.insertarLinkLicitacion(enlace, expediente, xml, post, id);
+					String xml = getXML(link).replaceAll("'", "''");
+					database.insertXML(link, expediente, xml, post, id);
 				} else {
 					// Podría ser causado por que aparece un contrato nuevo
 					// mientras se parsea
-					System.out.printf("\n%s - WARNING enlace duplicado [%s]", getNow(), enlace);
+					System.out.printf("\n%s - WARNING link duplicado [%s]", getNow(), link);
 				}
 			}
 		}

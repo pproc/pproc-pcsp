@@ -27,6 +27,7 @@ public class PC {
 
 	public static final Resource AwardCriteriaCombination = resource("AwardCriteriaCombination");
 	public static final Resource AwardCriterion = resource("AwardCriterion");
+	public static final Resource Tender = resource("Tender");
 
 	public static final Property contractingAuthority = property("contractingAuthority");
 	public static final Property awardCriteriaCombination = property("awardCriteriaCombination");

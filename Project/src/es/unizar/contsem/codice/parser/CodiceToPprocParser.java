@@ -130,7 +130,7 @@ public class CodiceToPprocParser {
 			organizationResource.addProperty(ORG.hasSite, placeResource);
 
 			// s:Place s:address
-			Resource postalAddressResource = model.createResource(organizationResourceURI + "/PostalAddress");
+			Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
 			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 			placeResource.addProperty(S.address, postalAddressResource);
 			if ((altString = document.getRootElement().element("ContractingParty").element("Party")
@@ -198,7 +198,7 @@ public class CodiceToPprocParser {
 				organizationResource.addProperty(ORG.hasSite, placeResource);
 
 				// s:address s:PostalAddress
-				Resource postalAddressResource = model.createResource(organizationResourceURI + "/PostalAddress");
+				Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
 				postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 				placeResource.addProperty(S.address, postalAddressResource);
 				if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
@@ -237,7 +237,6 @@ public class CodiceToPprocParser {
 		if (document.getRootElement().element("ProcurementProject").element("PlannedPeriod") != null) {
 			Resource ctcResource = model.createResource(contractResourceURI + "/ContractTemporalConditions");
 			ctcResource.addProperty(RDF.type, PPROC.ContractTemporalConditions);
-			contractResource.addProperty(PPROC.contractTemporalConditions, ctcResource);
 
 			// pproc:ContractTemporalConditions pproc:estimatedDuration
 			if ((altString = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
@@ -255,15 +254,17 @@ public class CodiceToPprocParser {
 					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
 					break;
 				}
+
 			// TODO pproc:ContractTemporalConditions pproc:estimatedEndDate
 			// (falta mirar como es udt:DateType)
+
+			contractResource.addProperty(PPROC.contractTemporalConditions, ctcResource);
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (1)
 		if (document.getRootElement().element("ProcurementProject").element("BudgetAmount") != null) {
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
-			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 
 			// pproc:ContractEconomicConditions pproc:estimatedValue
 			if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
@@ -306,18 +307,18 @@ public class CodiceToPprocParser {
 					priceResource.addProperty(GR.hasCurrency, altString);
 				cecResource.addProperty(PPROC.budgetPrice, priceResource);
 			}
+
+			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (2)
 		if (document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount") != null) {
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
-			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 
 			// pproc:ContractEconomicConditions pproc:feePrice
 			if ((altString = document.getRootElement().element("ProcurementProject").elementText("RequiredFeeAmount")) != null) {
-				Resource priceResource = model.createResource(contractResourceURI
-						+ "/ContractEconomicConditions/EstimatedValue");
+				Resource priceResource = model.createResource(cecResource + "/FeePrice");
 				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
 				priceResource.addProperty(GR.hasCurrencyValue, altString);
 				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
@@ -326,13 +327,14 @@ public class CodiceToPprocParser {
 					priceResource.addProperty(GR.hasCurrency, altString);
 				cecResource.addProperty(PPROC.feePrice, priceResource);
 			}
+
+			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 		}
 
 		// pproc:Contract pproc:contractProcedureSpecifications
 		if (document.getRootElement().element("TenderingProcess") != null) {
 			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
 			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
-			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 
 			// pproc:ContractProcedureSpecifications pproc:urgencyType
 			// TODO parseo independiente de versión (parseo del .gc)
@@ -418,10 +420,14 @@ public class CodiceToPprocParser {
 						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
 						break;
 					}
+
 				// TODO pproc:FrameworkResource pproc:estimatedEndDate
 				// (falta mirar como es udt:DateType)
+
 				contractResource.addProperty(PPROC.frameworkAgreement, frameworkResource);
 			}
+
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 		}
 
 		// pproc:Contract pproc:contractObject
@@ -438,7 +444,7 @@ public class CodiceToPprocParser {
 				for (Iterator iter = document.getRootElement().element("ProcurementProject")
 						.elementIterator("RequestForTenderLine"); iter.hasNext();) {
 					altElement = (Element) iter.next();
-					Resource offeringResource = model.createResource(contractResourceURI + "/ContractObject/Offering_"
+					Resource offeringResource = model.createResource(objectResource + "Offering_"
 							+ altElement.elementText("ID"));
 					offeringResource.addProperty(RDF.type, GR.Offering);
 
@@ -452,8 +458,7 @@ public class CodiceToPprocParser {
 
 					// gr:Offering gr:hasEligibleQuantity
 					if ((altString = altElement.elementText("Quantity")) != null) {
-						Resource quantityResource = model.createResource(contractResourceURI
-								+ "/ContractObject/Offering_" + altElement.elementText("ID") + "/QuantitativeValue");
+						Resource quantityResource = model.createResource(offeringResource + "/QuantitativeValue");
 						quantityResource.addProperty(RDF.type, GR.QuantitativeValue);
 
 						// gr:QuantitativeValue gr:hasValue
@@ -468,8 +473,7 @@ public class CodiceToPprocParser {
 
 					// gr:Offering gr:hasPriceSpecification (1)
 					if ((altString = altElement.elementText("MaximumTaxExclusiveAmount")) != null) {
-						Resource priceResource = model.createResource(contractResourceURI + "/ContractObject/Offering_"
-								+ altElement.elementText("ID") + "/MaximumTaxExclusiveAmount");
+						Resource priceResource = model.createResource(offeringResource + "/MaximumTaxExclusiveAmount");
 						priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
 						priceResource.addProperty(GR.hasCurrencyValue, altString);
 						priceResource.addProperty(GR.valueAddedTaxIncluded, "false");
@@ -480,8 +484,7 @@ public class CodiceToPprocParser {
 
 					// gr:Offering gr:hasPriceSpecification (2)
 					if ((altString = altElement.elementText("MaximumTaxInclusiveAmount")) != null) {
-						Resource priceResource = model.createResource(contractResourceURI + "/ContractObject/Offering_"
-								+ altElement.elementText("ID") + "/MaximumTaxInclusiveAmount");
+						Resource priceResource = model.createResource(offeringResource + "/MaximumTaxInclusiveAmount");
 						priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
 						priceResource.addProperty(GR.hasCurrencyValue, altString);
 						priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
@@ -493,8 +496,7 @@ public class CodiceToPprocParser {
 					// gr:Offering gr:hasPriceSpecification (3)
 					if ((altString = altElement.element("RequiredItemLocationQuantity").element("Price")
 							.elementText("PriceAmount")) != null) {
-						Resource priceResource = model.createResource(contractResourceURI + "/ContractObject/Offering_"
-								+ altElement.elementText("ID") + "/UnitPrice");
+						Resource priceResource = model.createResource(offeringResource + "/UnitPrice");
 						priceResource.addProperty(RDF.type, GR.UnitPriceSpecification);
 						priceResource.addProperty(GR.hasCurrencyValue, altString);
 						priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
@@ -510,9 +512,7 @@ public class CodiceToPprocParser {
 								"MinimumQuantity")) != null)
 								|| ((altString2 = altElement.element("RequiredItemLocationQuantity").elementText(
 										"MaximumQuantity")) != null)) {
-							Resource quantityResource = model.createResource(contractResourceURI
-									+ "/ContractObject/Offering_" + altElement.elementText("ID")
-									+ "/UnitPrice/QuantitativeValue");
+							Resource quantityResource = model.createResource(priceResource + "/QuantitativeValue");
 							quantityResource.addProperty(RDF.type, GR.QuantitativeValue);
 
 							// gr:QuantitativeValue gr:hasMinValue
@@ -534,12 +534,15 @@ public class CodiceToPprocParser {
 										.element("MaximumQuantity").attributeValue("unitCode")) != null)
 									quantityResource.addProperty(GR.hasUnitOfMeasurement, altString);
 							}
+
 							priceResource.addProperty(GR.hasEligibleQuantity, quantityResource);
 						}
 					}
+
 					objectResource.addProperty(PPROC.provision, offeringResource);
 				}
 			}
+
 			contractResource.addProperty(PPROC.contractObject, objectResource);
 		}
 
@@ -614,8 +617,8 @@ public class CodiceToPprocParser {
 			for (Iterator iter = document.getRootElement().element("TenderingTerms").element("AwardingTerms")
 					.elementIterator("AwardingCriteria"); iter.hasNext();) {
 				altElement = (Element) iter.next();
-				Resource criterionResource = model.createResource(contractResourceURI
-						+ "/AwardCriteriaCombination/Criterion" + altElement.elementText("ID"));
+				Resource criterionResource = model.createResource(criteriaCombinationResource + "/Criterion"
+						+ altElement.elementText("ID"));
 				criterionResource.addProperty(RDF.type, PC.AwardCriterion);
 
 				// pc:AwardCriterion rdf:type
@@ -656,6 +659,7 @@ public class CodiceToPprocParser {
 
 				criteriaCombinationResource.addProperty(PC.awardCriterion, criterionResource);
 			}
+
 			contractResource.addProperty(PC.awardCriteriaCombination, criteriaCombinationResource);
 		}
 
@@ -663,9 +667,7 @@ public class CodiceToPprocParser {
 		if (document.getRootElement().element("TenderingTerms") != null) {
 			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
 			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
-			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
-			Resource addionalObligationsResource = model.createResource(contractResourceURI
-					+ "/ContractAdditionalObligations");
+			Resource addionalObligationsResource = model.createResource(cpeResource + "/ContractAdditionalObligations");
 			addionalObligationsResource.addProperty(RDF.type, PPROC.ContractAdditionalObligations);
 
 			// pproc:ContractAdditionalObligations pproc:finalFinancialGuarantee
@@ -739,8 +741,8 @@ public class CodiceToPprocParser {
 		// pproc:ContractProcedureSpecifications pproc:tenderInformationProvider (1)
 		if (document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty") != null) {
 			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
-			Resource informationProviderResource = model.createResource(contractResourceURI
-					+ "/AdditionalInformationProvider");
+			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
+			Resource informationProviderResource = model.createResource(cpeResource + "/AdditionalInformationProvider");
 			informationProviderResource.addProperty(RDF.type, PPROC.InformationProvider);
 
 			// pproc:InformationProvider s:location
@@ -754,7 +756,7 @@ public class CodiceToPprocParser {
 				placeResource.addProperty(S.name, altString);
 
 			// s:Place s:address
-			Resource postalAddressResource = model.createResource(informationProviderResource + "/PostalAddress");
+			Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
 			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 			placeResource.addProperty(S.address, postalAddressResource);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
@@ -775,13 +777,15 @@ public class CodiceToPprocParser {
 					.element("DocumentAvailabilityPeriod")) != null)
 				informationProviderResource.addProperty(PPROC.estimatedEndDate, altElement.elementText("EndDate"));
 
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
 		}
 
 		// pproc:ContractProcedureSpecifications pproc:tenderInformationProvider (2)
 		if (document.getRootElement().element("TenderingTerms").element("DocumentProviderParty") != null) {
 			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
-			Resource informationProviderResource = model.createResource(contractResourceURI + "/DocumentProviderParty");
+			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
+			Resource informationProviderResource = model.createResource(cpeResource + "/DocumentProviderParty");
 			informationProviderResource.addProperty(RDF.type, PPROC.InformationProvider);
 
 			// pproc:InformationProvider s:location
@@ -795,7 +799,7 @@ public class CodiceToPprocParser {
 				placeResource.addProperty(S.name, altString);
 
 			// s:Place s:address
-			Resource postalAddressResource = model.createResource(informationProviderResource + "/PostalAddress");
+			Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
 			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 			placeResource.addProperty(S.address, postalAddressResource);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
@@ -811,14 +815,222 @@ public class CodiceToPprocParser {
 					.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
 				postalAddressResource.addProperty(S.addressCountry, altString);
 
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
 		}
 
-		//
+		// pproc:ContractProcedureSpecifications pproc:tenderDeadline
+		if (document.getRootElement().element("TenderingProcess").element("TenderSubmissionDeadlinePeriod") != null) {
+			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
+			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
+			altString = document.getRootElement().element("TenderingProcess").element("TenderSubmissionDeadlinePeriod")
+					.elementText("EndDate");
+			altString2 = document.getRootElement().element("TenderingProcess")
+					.element("TenderSubmissionDeadlinePeriod").elementText("EndTime");
+			if (altString.indexOf("+") != -1)
+				altString = altString.substring(0, altString.indexOf("+"));
+
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
+			cpeResource.addProperty(PPROC.tenderDeadline, altString + "T" + altString2);
+		}
+
+		// pproc:Contract pproc:tenderRequirements
+		if (document.getRootElement().element("TenderingTerms").element("TenderPreparation") != null
+				|| document.getRootElement().element("TenderingTerms").element("TenderValidityPeriod") != null) {
+			Resource tenderRequirementsResource = model.createResource(contractResourceURI + "/TenderRequirements");
+			tenderRequirementsResource.addProperty(RDF.type, PPROC.TenderRequirements);
+
+			// pproc:TenderRequirements pproc:tenderDocumentNeeds
+			for (Iterator iter = document.getRootElement().element("TenderingTerms")
+					.elementIterator("TenderPreparation"); iter.hasNext();) {
+				altElement = (Element) iter.next();
+				altString2 = "Documentos sobre " + altElement.elementText("TenderEnvelopeID") + " : ";
+				if ((altString = altElement.elementText("Description")) != null)
+					altString2 += " | " + altString;
+				if (altElement.element("DocumentTenderRequirement") != null) {
+					for (Iterator iter2 = altElement.elementIterator("DocumentTenderRequirement"); iter2.hasNext();) {
+						Element altElement2 = (Element) iter2.next();
+						if ((altString = altElement2.elementText("Name")) != null)
+							altString2 += " | " + altString;
+						if ((altString = altElement2.elementText("Description")) != null)
+							altString2 += " | " + altString;
+					}
+				}
+				tenderRequirementsResource.addProperty(PPROC.tenderDocumentNeeds, altString2);
+			}
+
+			// pproc:TenderRequirements pproc:tenderManteinanceDuration
+			if ((altString = document.getRootElement().element("TenderingTerms").element("TenderValidityPeriod")
+					.elementText("DurationMeasure")) != null
+					&& (altString2 = document.getRootElement().element("TenderingTerms")
+							.element("TenderValidityPeriod").element("DurationMeasure").attributeValue("unitCode")) != null)
+				switch (altString2) {
+				case "DAY":
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "D");
+					break;
+				case "MON":
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "M");
+					break;
+				case "ANN":
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "Y");
+					break;
+				}
+
+			contractResource.addProperty(PPROC.tenderRequirements, tenderRequirementsResource);
+		}
+
+		// pproc:ContractProcedureSpecifications pproc:tenderSubmissionLocation
+		if (document.getRootElement().element("TenderingTerms").element("TenderRecipentParty") != null) {
+			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
+			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
+			Resource placeResource = model.createResource(cpeResource + "/TenderSubmissionLocation");
+			placeResource.addProperty(RDF.type, S.Place);
+
+			// s:Place s:name
+			if ((altString = document.getRootElement().element("TenderingTerms").element("TenderRecipentParty")
+					.element("PartyName").elementText("Name")) != null)
+				placeResource.addProperty(S.name, altString);
+
+			// s:Place s:address
+			Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
+			postalAddressResource.addProperty(RDF.type, S.PostalAddress);
+			placeResource.addProperty(S.address, postalAddressResource);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").elementText("CityName")) != null)
+				postalAddressResource.addProperty(S.addressLocality, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").elementText("PostalZone")) != null)
+				postalAddressResource.addProperty(S.postalCode, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
+				postalAddressResource.addProperty(S.streetAddress, altString);
+			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
+				postalAddressResource.addProperty(S.addressCountry, altString);
+
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
+			cpeResource.addProperty(PPROC.tenderSubmissionLocation, placeResource);
+		}
+
+		// pproc:ContractProcedureSpecifications pproc:contractActivities
+		if (document.getRootElement().element("TenderingProcess").element("OpenTenderEvent") != null) {
+			Resource cpeResource = model.createResource(contractResourceURI + "/ContractProcedureSpecifications");
+			cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
+			Resource contractActivitiesResource = model.createResource(cpeResource + "/ContractActivities");
+			contractActivitiesResource.addProperty(RDF.type, PPROC.ContractActivities);
+
+			// pproc:ContractActivities pproc:tenderMeeting
+			for (Iterator iter = document.getRootElement().element("TenderingProcess")
+					.elementIterator("OpenTenderEvent"); iter.hasNext();) {
+				altElement = (Element) iter.next();
+				Resource tenderMeetingResource = model.createResource(contractActivitiesResource + "/Event_"
+						+ getEventID());
+				tenderMeetingResource.addProperty(RDF.type, PPROC.TenderMeeting);
+				tenderMeetingResource.addProperty(RDF.type, S.Event);
+
+				// pproc:TenderMeeting pproc:tenderPurpose
+				if ((altString = altElement.elementText("Description")) != null)
+					tenderMeetingResource.addProperty(PPROC.tenderPurpose, altString);
+				else if ((altString = altElement.elementText("TypeCode")) != null)
+					// Si no hay descripción textual, usaremos la del código
+					// TODO parseo independiente de versión (parseo del .gc)
+					switch (altString) {
+					case "1":
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre administrativa");
+						break;
+					case "2":
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta técnica");
+						break;
+					case "3":
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose,
+								"Apertura sobre oferta técnica y económica");
+						break;
+					case "4":
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta económica");
+						break;
+					}
+
+				// pproc:TenderMeeting s:location
+				if (altElement.elementText("OcurrenceLocation") != null) {
+					Resource placeResource = model.createResource(tenderMeetingResource + "/Place");
+					placeResource.addProperty(RDF.type, S.Place);
+
+					// s:Place s:name
+					if ((altString = altElement.elementText("Description")) != null)
+						placeResource.addProperty(S.name, altString);
+
+					// s:Place s:address
+					Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
+					postalAddressResource.addProperty(RDF.type, S.PostalAddress);
+					placeResource.addProperty(S.address, postalAddressResource);
+					if ((altString = altElement.element("Address").elementText("CityName")) != null)
+						postalAddressResource.addProperty(S.addressLocality, altString);
+					if ((altString = altElement.element("Address").elementText("PostalZone")) != null)
+						postalAddressResource.addProperty(S.postalCode, altString);
+					if ((altString = altElement.element("Address").element("AddressLine").elementText("Line")) != null)
+						postalAddressResource.addProperty(S.streetAddress, altString);
+					if ((altString = altElement.element("Address").element("Country").elementText("IdentificationCode")) != null)
+						postalAddressResource.addProperty(S.addressCountry, altString);
+
+					tenderMeetingResource.addProperty(S.location, placeResource);
+				}
+
+				// pproc:TenderMeeting s:startDate
+				if ((altString = altElement.elementText("OcurrenceDate")) != null
+						&& (altString2 = altElement.elementText("OcurrenceTime")) != null) {
+					if (altString.indexOf("+") != -1)
+						altString = altString.substring(0, altString.indexOf("+"));
+					tenderMeetingResource.addProperty(S.startDate, altString + "T" + altString2);
+				}
+
+				contractActivitiesResource.addProperty(PPROC.tenderMeeting, tenderMeetingResource);
+			}
+
+			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
+			cpeResource.addProperty(PPROC.contractActivities, contractActivitiesResource);
+		}
+
+		// pproc:Contract pc:tender
+		if (document.getRootElement().element("TenderResult") != null) {
+			Resource tempTenderResource = ResourceFactory.createResource(contractResourceURI + "/Tender");
+			tempTenderResource.addProperty(RDF.type, PC.Tender);
+			boolean crealo = false;
+			
+			// pc:Tender rdf:type
+			if ((altString = document.getRootElement().element("TenderResult").elementText("ResultCode")) != null) {
+				switch (altString) {
+				case "2":
+				case "8":
+					tempTenderResource.addProperty(RDF.type, PPROC.AwardedTender);
+					crealo = true;
+					break;
+				case "9":
+					tempTenderResource.addProperty(RDF.type, PPROC.FormalizedTender);
+					crealo = true;
+				}
+			}
+			
+			// pc:Tender
+			if (crealo) {
+				Resource tenderResource = model.createResource(tempTenderResource);
+				
+				
+				
+				
+			}
+		}
 
 		model.write(System.out, "Turtle");
 	}
+
 	// TODO añadir los datatype a las propiedades data
 	// TODO control de errores de parseo para cuando se lance contra toda la bbdd
+	// TODO consultar el uso del mapeo (sobretodo en aquellas raras, como pproc:tenderDocumentNeeds)
+
+	private static int eventId = 1;
+
+	private static int getEventID() {
+		return eventId++;
+	}
 
 }

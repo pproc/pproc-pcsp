@@ -5,13 +5,20 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.swing.JOptionPane;
 
 public class Database {
 
 	private Connection miConexion;
+	private Set<Row> rowSet = new HashSet<Row>();
+	private Set<String> idplataformaSet = null;
+	private Set<String> linkSet = null;
 
 	public Database() {
 		super();
@@ -20,69 +27,99 @@ public class Database {
 			System.out.printf("\n%s - INFO Connected to database", ExtraerLicitaciones.getNow());
 	}
 
-	public void insertarLinkLicitacion(String enlace, String expediente, String xml, String post, String id) {
-		long startTime = System.currentTimeMillis();
-		String query = null;
-		try {
-			if (!xmlYaInsertado(enlace)) {
-				Statement st = (Statement) miConexion.createStatement();
-				query = "INSERT INTO newxml (link,expediente,xml,peticion,idplataforma) VALUES ('" + enlace.trim()
-						+ "','" + expediente.replaceAll("'", "_").trim() + "','" + xml.trim() + "','" + post.trim()
-						+ "','" + id + "')";
-				st.executeUpdate(query);
+	public void insertXML(String link, String expediente, String xml, String post, String idplataforma) {
+		if (rowSet.size() > 10) {
+			insertQueue();
+			rowSet = new HashSet<Row>();
+			idplataformaSet.add(idplataforma);
+			linkSet.add(xml);
+		} else {
+			rowSet.add(new Row(link, expediente, xml, post, idplataforma));
+		}
+	}
+
+	public boolean linkExists(String link) throws SQLException {
+
+		if (linkSet == null) {
+			long startTime = System.currentTimeMillis();
+			linkSet = new HashSet<String>();
+			Statement stmt = null;
+			ResultSet rs = null;
+			try {
+				stmt = miConexion.createStatement();
+				rs = stmt.executeQuery("SELECT link FROM newxml");
+				while (rs.next()) {
+					linkSet.add(rs.getString("link"));
+				}
+			} catch (SQLException e) {
+				System.out.printf("\n%s - ERROR error en linkExists", ExtraerLicitaciones.getNow());
+				e.printStackTrace();
+			} finally {
+				rs.close();
+				stmt.close();
 			}
-		} catch (SQLException e) {
-			System.out.printf("\n%s - ERROR error en insertarLinkLicitacion", ExtraerLicitaciones.getNow());
-			e.printStackTrace();
+			System.out.printf("\n%s - INFO inicialización de linkExists tarda %f", ExtraerLicitaciones.getNow(),
+					(double) (System.currentTimeMillis() - startTime) / 1000);
+			System.out.printf("\n%s - INFO encontrados %d link en base de datos", ExtraerLicitaciones.getNow(),
+					linkSet.size());
 		}
-		System.out.printf("\n%s - DEBUG insertarLinkLicitacion tarda %f", ExtraerLicitaciones.getNow(), (double)(System.currentTimeMillis()-startTime)/1000);
+
+		return linkSet.contains(link);
 	}
 
-	private boolean xmlYaInsertado(String link) throws SQLException {
+	public boolean idplataformExists(String idplataforma) throws SQLException {
 
-		Statement stmt = null;
-		ResultSet rs = null;
-		int rowCount = -1;
-		try {
-			stmt = miConexion.createStatement();
-			rs = stmt.executeQuery("SELECT COUNT(id) FROM newxml where link like '" + link.trim() + "'");
-			rs.next();
-			rowCount = rs.getInt(1);
-		} catch (SQLException e) {
-			System.out.printf("\n%s - ERROR error en xmlYaInsertado", ExtraerLicitaciones.getNow());
-			e.printStackTrace();
-		} finally {
-			rs.close();
-			stmt.close();
+		if (idplataformaSet == null) {
+			long startTime = System.currentTimeMillis();
+			idplataformaSet = new HashSet<String>();
+			Statement stmt = null;
+			ResultSet rs = null;
+			try {
+				stmt = miConexion.createStatement();
+				rs = stmt.executeQuery("SELECT idplataforma FROM newxml");
+				while (rs.next()) {
+					idplataformaSet.add(rs.getString("idplataforma"));
+				}
+			} catch (SQLException e) {
+				System.out.printf("\n%s - ERROR error en idplataformExists", ExtraerLicitaciones.getNow());
+				e.printStackTrace();
+			} finally {
+				rs.close();
+				stmt.close();
+			}
+			System.out.printf("\n%s - INFO inicialización de idplataformExists tarda %f", ExtraerLicitaciones.getNow(),
+					(double) (System.currentTimeMillis() - startTime) / 1000);
+			System.out.printf("\n%s - INFO encontrados %d idplataforma en base de datos", ExtraerLicitaciones.getNow(),
+					idplataformaSet.size());
 		}
-		if (rowCount > 0)
-			return true;
-		else
-			return false;
+
+		return idplataformaSet.contains(idplataforma);
 	}
 
-	public boolean existeIdPlataforma(String id) throws SQLException {
+	private void insertQueue() {
 		long startTime = System.currentTimeMillis();
-		Statement stmt = null;
-		ResultSet rs = null;
-		int rowCount = -1;
-		try {
-			stmt = miConexion.createStatement();
-			rs = stmt.executeQuery("SELECT COUNT(id) FROM newxml where idplataforma like '" + id.trim() + "'");
-			rs.next();
-			rowCount = rs.getInt(1);
-		} catch (SQLException e) {
-			System.out.printf("\n%s - ERROR error en existeIdPlataforma", ExtraerLicitaciones.getNow());
-			e.printStackTrace();
-		} finally {
-			rs.close();
-			stmt.close();
+		String query = "INSERT INTO newxml (link,expediente,xml,peticion,idplataforma) VALUES ";
+		for (Row row : rowSet) {
+			try {
+				if (!linkExists(row.link)) {
+					query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
+							+ row.xml.trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
+				}
+			} catch (SQLException e) {
+				System.out.printf("\n%s - ERROR error en insertQueue", ExtraerLicitaciones.getNow());
+				e.printStackTrace();
+			}
 		}
-		System.out.printf("\n%s - DEBUG existeIdPlataforma tarda %f", ExtraerLicitaciones.getNow(), (double)(System.currentTimeMillis()-startTime)/1000);
-		if (rowCount > 0)
-			return true;
-		else
-			return false;
+		query = query.substring(0, query.length() - 1) + ";";
+		try {
+			Statement st = (Statement) miConexion.createStatement();
+			st.executeUpdate(query);
+		} catch (SQLException e) {
+			System.out.printf("\n%s - ERROR error en insertQueue", ExtraerLicitaciones.getNow());
+			e.printStackTrace();
+		}
+		System.out.printf("\n%s - DEBUG insertQueue tarda %f", ExtraerLicitaciones.getNow(),
+				(double) (System.currentTimeMillis() - startTime) / 1000);
 	}
 
 	public static Connection getConnection() {

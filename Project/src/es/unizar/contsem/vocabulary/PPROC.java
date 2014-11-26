@@ -62,6 +62,11 @@ public class PPROC {
 	public static final Resource ObjectiveAwardCriterion = resource("ObjectiveAwardCriterion");
 	public static final Resource ContractAdditionalObligations = resource("ContractAdditionalObligations");
 	public static final Resource InformationProvider = resource("InformationProvider");
+	public static final Resource TenderRequirements = resource("TenderRequirements");
+	public static final Resource ContractActivities = resource("ContractActivities");
+	public static final Resource TenderMeeting = resource("TenderMeeting");
+	public static final Resource AwardedTender = resource("AwardedTender");
+	public static final Resource FormalizedTender = resource("FormalizedTender");
 
 	public static final Property delegatingAuthority = property("delegatingAuthority");
 	public static final Property contractTemporalConditions = property("contractTemporalConditions");
@@ -94,5 +99,13 @@ public class PPROC {
 	public static final Property otherGuarantee = property("otherGuarantee");
 	public static final Property advertisementAmount = property("advertisementAmount");
 	public static final Property tenderInformationProvider = property("tenderInformationProvider");
+	public static final Property tenderDeadline = property("tenderDeadline");
+	public static final Property tenderRequirements = property("tenderRequirements");
+	public static final Property tenderDocumentNeeds = property("tenderDocumentNeeds");
+	public static final Property tenderManteinanceDuration = property("tenderManteinanceDuration");
+	public static final Property tenderSubmissionLocation = property("tenderSubmissionLocation");
+	public static final Property tenderMeeting = property("tenderMeeting");
+	public static final Property tenderPurpose = property("tenderPurpose");
+	public static final Property contractActivities = property("contractActivities");
 
 }
