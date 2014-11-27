@@ -106,11 +106,11 @@ public class CodiceToPprocParser {
 			else if (altElement.element("ID").attributeValue("schemeName").equals("NIF"))
 				altString2 = altElement.elementText("ID");
 		}
-		String organizationResourceURI = BASE_URI_ORGANIZATION + altString;
-		if (!model.containsResource(ResourceFactory.createResource(BASE_URI_ORGANIZATION + altString))) {
+		String organizationResourceURI = BASE_URI_ORGANIZATION + altString.replace(" ", "");
+		if (!model.containsResource(ResourceFactory.createResource(organizationResourceURI))) {
 
 			// org:Organization rdf:type
-			Resource organizationResource = model.createResource(BASE_URI_ORGANIZATION + altString);
+			Resource organizationResource = model.createResource(organizationResourceURI);
 			organizationResource.addProperty(RDF.type, ORG.Organization);
 
 			// org:Organization dcterms:title
@@ -178,7 +178,7 @@ public class CodiceToPprocParser {
 					altString2 = altElement.elementText("ID");
 
 			}
-			organizationResourceURI = BASE_URI_ORGANIZATION + altString;
+			organizationResourceURI = BASE_URI_ORGANIZATION + altString.replace(" ", "");
 			if (!model.containsResource(ResourceFactory.createResource(organizationResourceURI))) {
 
 				// org:Organization rdf:type
@@ -1117,6 +1117,7 @@ public class CodiceToPprocParser {
 								altString = BASE_URI_ORGANIZATION
 										+ altElement.element("WinningParty").element("PartyIdentification")
 												.elementText("ID");
+								altString = altString.replace(" ", "");
 								// altSupplierResource = ResourceFactory.createResource(BASE_URI_ORGANIZATION
 								// + altElement.element("WinningParty").element("PartyIdentification")
 								// .elementText("ID"));

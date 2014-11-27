@@ -17,22 +17,22 @@ public class Log {
 
 	public static void error(String message, Object... args) {
 		if (message_priority <= ERROR)
-			System.out.printf(message, args);
+			System.out.printf(getNow() + "[ERROR]: " + message + "\n", args);
 	}
 
 	public static void warning(String message, Object... args) {
 		if (message_priority <= WARNING)
-			System.out.printf(message, args);
+			System.out.printf(getNow() + "[WARNING]: " + message + "\n", args);
 	}
 
 	public static void info(String message, Object... args) {
 		if (message_priority <= INFO)
-			System.out.printf(message, args);
+			System.out.printf(getNow() + "[INFO]: " + message + "\n", args);
 	}
 
 	public static void debug(String message, Object... args) {
 		if (message_priority <= DEBUG)
-			System.out.printf(getNow() + "[INFO]: " + message, args);
+			System.out.printf(getNow() + "[DEBUG]: " + message + "\n", args);
 	}
 
 	private static String getNow() {

@@ -19,6 +19,7 @@ public class Test {
 		Database database = new Database();
 		database.connect();
 		Model model = ModelFactory.createDefaultModel();
+		int xmlErrorCount = 0;
 
 		for (int i = 1; i <= 30000; i++) {
 			try {
@@ -36,7 +37,8 @@ public class Test {
 				}
 				Log.info("XML %d parseado e introducido en el modelo", i);
 			} catch (Exception exc) {
-				Log.info("error al introducir el XML %d", i);
+				Log.error("error al introducir el XML %d", i);
+				xmlErrorCount++;
 			}
 		}
 
@@ -46,6 +48,7 @@ public class Test {
 
 		model.write(new PrintWriter("pcsp-output.ttl", "UTF-8"), "Turtle");
 		Log.info("escritura finalizada");
+		Log.info("%d XMLs han fallado", xmlErrorCount);
 
 	}
 }
