@@ -10,26 +10,42 @@ import org.dom4j.io.SAXReader;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
-import es.unizar.contsem.codice.parser.database.DatabaseManager;
+import es.danielrusa.TFG_crawler.Database;
 
 public class Test {
 
 	public static void main(String[] args) throws Exception {
 
-		DatabaseManager db = new DatabaseManager();
-		String firstXML = db.getFirstXML();
-
-		SAXReader reader = new SAXReader();
-		Document document = reader.read(new ByteArrayInputStream(firstXML
-				.getBytes(StandardCharsets.UTF_8)));
-
-		PrintWriter writer = new PrintWriter("codice_doc.xml", "UTF-8");
-		writer.print(document.asXML());
-		writer.close();
-		
+		Database database = new Database();
+		database.connect();
 		Model model = ModelFactory.createDefaultModel();
-		CodiceToPprocParser.parseCodiceXML(model, document);
+
+		for (int i = 1; i <= 30000; i++) {
+			try {
+				String xml = database.getXML(i);
+				SAXReader reader = new SAXReader();
+				Document document = reader.read(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+				try {
+					CodiceToPprocParser.parseCodiceXML(model, document);
+				} catch (Exception ex) {
+					PrintWriter writer = new PrintWriter("codice_doc.xml", "UTF-8");
+					writer.print(document.asXML());
+					writer.close();
+					ex.printStackTrace();
+					return;
+				}
+				Log.info("XML %d parseado e introducido en el modelo", i);
+			} catch (Exception exc) {
+				Log.info("error al introducir el XML %d", i);
+			}
+		}
+
+		// FileOutputStream out = new FileOutputStream("output2.n3");
+		// model.write(out, "N3");
+		// out.close();
+
+		model.write(new PrintWriter("pcsp-output.ttl", "UTF-8"), "Turtle");
+		Log.info("escritura finalizada");
 
 	}
-
 }

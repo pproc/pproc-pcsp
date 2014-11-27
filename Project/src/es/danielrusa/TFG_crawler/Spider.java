@@ -4,9 +4,10 @@ public class Spider {
 
 	public static void main(String[] args) {
 
-		Estadisticas estadisticas = new Estadisticas();
-		Database bd = new Database();
+		Estadisticas statistics = new Estadisticas();
+		Database database = new Database();
+		database.connect();
 		ExtraerLicitaciones el = new ExtraerLicitaciones();
-		el.start(bd, "https://contrataciondelestado.es/wps/portal/", estadisticas);
+		el.start(database, "https://contrataciondelestado.es/wps/portal/", statistics);
 	}
 }

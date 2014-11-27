@@ -5,69 +5,64 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
+import es.unizar.contsem.codice.parser.Log;
 
 public class Database {
 
-	private Connection miConexion;
+	private Connection myConnection;
 	private Set<Row> rowSet = new HashSet<Row>();
 	private Set<String> idplataformaSet = null;
 	private Set<String> linkSet = null;
 
-	public Database() {
-		super();
-		this.miConexion = getConnection();
-		if (miConexion != null)
-			System.out.printf("\n%s - INFO Connected to database", ExtraerLicitaciones.getNow());
+	public void connect() {
+		myConnection = getConnection();
+		if (myConnection != null)
+			Log.info("connected to database");
 	}
 
 	public void insertXML(String link, String expediente, String xml, String post, String idplataforma) {
 		if (rowSet.size() > 10) {
-			insertQueue();
-			rowSet = new HashSet<Row>();
-			idplataformaSet.add(idplataforma);
-			linkSet.add(xml);
+			if (insertQueue()) {
+				rowSet = new HashSet<Row>();
+				idplataformaSet.add(idplataforma);
+				linkSet.add(xml);
+			} else {
+				Log.error("error grave en insertXML");
+			}
 		} else {
 			rowSet.add(new Row(link, expediente, xml, post, idplataforma));
 		}
 	}
 
-	public boolean linkExists(String link) throws SQLException {
-
+	public boolean linkExists(String link) {
 		if (linkSet == null) {
 			long startTime = System.currentTimeMillis();
 			linkSet = new HashSet<String>();
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
-				stmt = miConexion.createStatement();
+				stmt = myConnection.createStatement();
 				rs = stmt.executeQuery("SELECT link FROM newxml");
 				while (rs.next()) {
 					linkSet.add(rs.getString("link"));
 				}
-			} catch (SQLException e) {
-				System.out.printf("\n%s - ERROR error en linkExists", ExtraerLicitaciones.getNow());
-				e.printStackTrace();
-			} finally {
 				rs.close();
 				stmt.close();
+			} catch (SQLException e) {
+				Log.error("error en linkExists");
+				e.printStackTrace();
+			} finally {
 			}
-			System.out.printf("\n%s - INFO inicialización de linkExists tarda %f", ExtraerLicitaciones.getNow(),
-					(double) (System.currentTimeMillis() - startTime) / 1000);
-			System.out.printf("\n%s - INFO encontrados %d link en base de datos", ExtraerLicitaciones.getNow(),
-					linkSet.size());
+			Log.info("inicialización de linkExists tarda %f", (double) (System.currentTimeMillis() - startTime) / 1000);
+			Log.info("encontrados %d link en base de datos", linkSet.size());
 		}
-
 		return linkSet.contains(link);
 	}
 
-	public boolean idplataformExists(String idplataforma) throws SQLException {
+	public boolean idplataformExists(String idplataforma) {
 
 		if (idplataformaSet == null) {
 			long startTime = System.currentTimeMillis();
@@ -75,51 +70,76 @@ public class Database {
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
-				stmt = miConexion.createStatement();
+				stmt = myConnection.createStatement();
 				rs = stmt.executeQuery("SELECT idplataforma FROM newxml");
 				while (rs.next()) {
 					idplataformaSet.add(rs.getString("idplataforma"));
 				}
-			} catch (SQLException e) {
-				System.out.printf("\n%s - ERROR error en idplataformExists", ExtraerLicitaciones.getNow());
-				e.printStackTrace();
-			} finally {
 				rs.close();
 				stmt.close();
+			} catch (SQLException e) {
+				Log.error("error en idplataformExists");
+				e.printStackTrace();
 			}
-			System.out.printf("\n%s - INFO inicialización de idplataformExists tarda %f", ExtraerLicitaciones.getNow(),
+			Log.info("inicialización de idplataformExists tarda %f",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
-			System.out.printf("\n%s - INFO encontrados %d idplataforma en base de datos", ExtraerLicitaciones.getNow(),
-					idplataformaSet.size());
+			Log.info("encontrados %d idplataforma en base de datos", idplataformaSet.size());
 		}
 
 		return idplataformaSet.contains(idplataforma);
 	}
 
-	private void insertQueue() {
+	private boolean insertQueue() {
 		long startTime = System.currentTimeMillis();
 		String query = "INSERT INTO newxml (link,expediente,xml,peticion,idplataforma) VALUES ";
-		for (Row row : rowSet) {
-			try {
-				if (!linkExists(row.link)) {
-					query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
-							+ row.xml.trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
-				}
-			} catch (SQLException e) {
-				System.out.printf("\n%s - ERROR error en insertQueue", ExtraerLicitaciones.getNow());
-				e.printStackTrace();
-			}
-		}
+		for (Row row : rowSet)
+			if (!linkExists(row.link))
+				query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
+						+ row.xml.trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
 		query = query.substring(0, query.length() - 1) + ";";
+		if (tryInsertQueue(3, query)) {
+			Log.debug("insertQueue tarda %f", (double) (System.currentTimeMillis() - startTime) / 1000);
+			return true;
+		} else
+			return false;
+	}
+
+	private boolean tryInsertQueue(int numberOfTries, String query) {
+		if (numberOfTries > 0) {
+			try {
+				Statement st = (Statement) myConnection.createStatement();
+				st.executeUpdate(query);
+			} catch (SQLException e) {
+				Log.error("error en tryInsertQueue (%d)", numberOfTries);
+				try {
+					if (myConnection.isClosed()) {
+						connect();
+					}
+				} catch (Exception ex) {
+					Log.error("error INESPERADO en tryInsertQueue");
+				}
+				tryInsertQueue(numberOfTries - 1, query);
+			}
+			return true;
+		} else
+			return false;
+	}
+
+	public String getXML(int id) {
+		Statement stmt = null;
+		ResultSet rs = null;
+		String output = null;
 		try {
-			Statement st = (Statement) miConexion.createStatement();
-			st.executeUpdate(query);
+			stmt = myConnection.createStatement();
+			rs = stmt.executeQuery("SELECT xml FROM newxml where id='" + id + "'");
+			rs.next();
+			output = rs.getString("xml");
+			rs.close();
+			stmt.close();
 		} catch (SQLException e) {
-			System.out.printf("\n%s - ERROR error en insertQueue", ExtraerLicitaciones.getNow());
 			e.printStackTrace();
 		}
-		System.out.printf("\n%s - DEBUG insertQueue tarda %f", ExtraerLicitaciones.getNow(),
-				(double) (System.currentTimeMillis() - startTime) / 1000);
+		return output;
 	}
 
 	public static Connection getConnection() {
@@ -130,17 +150,8 @@ public class Database {
 			String usuarioDB = "carlos";
 			String passwordDB = "020202";
 			conexion = DriverManager.getConnection(servidor, usuarioDB, passwordDB);
-		} catch (ClassNotFoundException ex) {
-			JOptionPane.showMessageDialog(null, ex, "Error1 en la Conexión con la BD " + ex.getMessage(),
-					JOptionPane.ERROR_MESSAGE);
-			conexion = null;
-		} catch (SQLException ex) {
-			JOptionPane.showMessageDialog(null, ex, "Error2 en la Conexión con la BD " + ex.getMessage(),
-					JOptionPane.ERROR_MESSAGE);
-			conexion = null;
 		} catch (Exception ex) {
-			JOptionPane.showMessageDialog(null, ex, "Error3 en la Conexión con la BD " + ex.getMessage(),
-					JOptionPane.ERROR_MESSAGE);
+			Log.error("error while connecting to database : %s", ex.getMessage());
 			conexion = null;
 		}
 		return conexion;

@@ -11,6 +11,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import es.unizar.contsem.codice.parser.Log;
+
 public class DefaultTrustManager implements X509TrustManager {
 
 	@Override
@@ -31,13 +33,13 @@ public class DefaultTrustManager implements X509TrustManager {
 		try {
 			ctx = SSLContext.getInstance("TLS");
 		} catch (NoSuchAlgorithmException e1) {
-			System.out.printf("\n%s - ERROR error en CrearConexionHTTPS", ExtraerLicitaciones.getNow());
+			Log.error("error en CrearConexionHTTPS");
 			e1.printStackTrace();
 		}
 		try {
 			ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
 		} catch (KeyManagementException e) {
-			System.out.printf("\n%s - ERROR error en CrearConexionHTTPS", ExtraerLicitaciones.getNow());
+			Log.error("error en CrearConexionHTTPS");
 			e.printStackTrace();
 		}
 		SSLContext.setDefault(ctx);
