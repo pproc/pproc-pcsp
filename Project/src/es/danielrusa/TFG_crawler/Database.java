@@ -12,29 +12,40 @@ import es.unizar.contsem.codice.parser.Log;
 
 public class Database {
 
+	public boolean exhaustiveSearch = false;
 	private Connection myConnection;
 	private Set<Row> rowSet = new HashSet<Row>();
-	private Set<String> idplataformaSet = null;
+	private Set<String> platformIdSet = null;
 	private Set<String> linkSet = null;
 
 	public void connect() {
 		myConnection = getConnection();
 		if (myConnection != null)
-			Log.info("connected to database");
+			Log.info(this.getClass(), "connected to database");
 	}
 
-	public void insertXML(String link, String expediente, String xml, String post, String idplataforma) {
-		if (rowSet.size() > 10) {
-			if (insertQueue()) {
+	public void insertRow(String link, String expediente, String xml, String post, String idplataforma) {
+		rowSet.add(new Row(link, expediente, xml, post, idplataforma));
+		if (platformIdSet != null)
+			platformIdSet.add(idplataforma);
+		linkSet.add(xml);
+		if (rowSet.size() >= 10)
+			if (insertRowSet())
 				rowSet = new HashSet<Row>();
-				idplataformaSet.add(idplataforma);
-				linkSet.add(xml);
-			} else {
-				Log.error("error grave en insertXML");
-			}
-		} else {
-			rowSet.add(new Row(link, expediente, xml, post, idplataforma));
-		}
+			else
+				Log.error(this.getClass(), "error at insertRow");
+	}
+
+	public void insertRow(Row row) {
+		rowSet.add(row);
+		if (platformIdSet != null)
+			platformIdSet.add(row.idplataforma);
+		linkSet.add(row.xml);
+		if (rowSet.size() >= 10)
+			if (insertRowSet())
+				rowSet = new HashSet<Row>();
+			else
+				Log.error(this.getClass(), "error at insertRow");
 	}
 
 	public boolean linkExists(String link) {
@@ -44,6 +55,7 @@ public class Database {
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
+				Log.info(this.getClass(), "retrieving links from database ...");
 				stmt = myConnection.createStatement();
 				rs = stmt.executeQuery("SELECT link FROM newxml");
 				while (rs.next()) {
@@ -52,53 +64,58 @@ public class Database {
 				rs.close();
 				stmt.close();
 			} catch (SQLException e) {
-				Log.error("error en linkExists");
+				Log.error(this.getClass(), "error at linkExists");
 				e.printStackTrace();
 			} finally {
 			}
-			Log.info("inicialización de linkExists tarda %f", (double) (System.currentTimeMillis() - startTime) / 1000);
-			Log.info("encontrados %d link en base de datos", linkSet.size());
+			Log.info(this.getClass(), "init of linkExists takes %f seconds",
+					(double) (System.currentTimeMillis() - startTime) / 1000);
+			Log.info(this.getClass(), "found %d links in database", linkSet.size());
 		}
 		return linkSet.contains(link);
 	}
 
-	public boolean idplataformExists(String idplataforma) {
-
-		if (idplataformaSet == null) {
+	public boolean platformIdExists(String idplataforma) {
+		if (exhaustiveSearch)
+			return false;
+		if (platformIdSet == null) {
 			long startTime = System.currentTimeMillis();
-			idplataformaSet = new HashSet<String>();
+			platformIdSet = new HashSet<String>();
 			Statement stmt = null;
 			ResultSet rs = null;
 			try {
+				Log.info(this.getClass(), "retrieving platformIds from database ...");
 				stmt = myConnection.createStatement();
 				rs = stmt.executeQuery("SELECT idplataforma FROM newxml");
 				while (rs.next()) {
-					idplataformaSet.add(rs.getString("idplataforma"));
+					platformIdSet.add(rs.getString("idplataforma"));
 				}
 				rs.close();
 				stmt.close();
 			} catch (SQLException e) {
-				Log.error("error en idplataformExists");
+				Log.error(this.getClass(), "error at platformIdExists");
 				e.printStackTrace();
 			}
-			Log.info("inicialización de idplataformExists tarda %f",
+			Log.info(this.getClass(), "init of platformIdExists takes %f seconds",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
-			Log.info("encontrados %d idplataforma en base de datos", idplataformaSet.size());
+			Log.info(this.getClass(), "found %d platformIds in database", platformIdSet.size());
 		}
-
-		return idplataformaSet.contains(idplataforma);
+		return platformIdSet.contains(idplataforma);
 	}
 
-	private boolean insertQueue() {
+	private boolean insertRowSet() {
 		long startTime = System.currentTimeMillis();
 		String query = "INSERT INTO newxml (link,expediente,xml,peticion,idplataforma) VALUES ";
 		for (Row row : rowSet)
 			if (!linkExists(row.link))
 				query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
 						+ row.xml.trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
+			else
+				Log.warning(this.getClass(), "existing link not expected");
 		query = query.substring(0, query.length() - 1) + ";";
 		if (tryInsertQueue(3, query)) {
-			Log.debug("insertQueue tarda %f", (double) (System.currentTimeMillis() - startTime) / 1000);
+			Log.debug(this.getClass(), "insertQueue takes %f seconds",
+					(double) (System.currentTimeMillis() - startTime) / 1000);
 			return true;
 		} else
 			return false;
@@ -110,13 +127,13 @@ public class Database {
 				Statement st = (Statement) myConnection.createStatement();
 				st.executeUpdate(query);
 			} catch (SQLException e) {
-				Log.error("error en tryInsertQueue (%d)", numberOfTries);
+				Log.error(this.getClass(), "error connecting database, numberOfTries = %d)", numberOfTries);
 				try {
 					if (myConnection.isClosed()) {
 						connect();
 					}
 				} catch (Exception ex) {
-					Log.error("error INESPERADO en tryInsertQueue");
+					Log.error(this.getClass(), "unexpected error in tryInsertQueue");
 				}
 				tryInsertQueue(numberOfTries - 1, query);
 			}
@@ -142,7 +159,7 @@ public class Database {
 		return output;
 	}
 
-	public static Connection getConnection() {
+	public Connection getConnection() {
 		Connection conexion = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
@@ -151,7 +168,7 @@ public class Database {
 			String passwordDB = "020202";
 			conexion = DriverManager.getConnection(servidor, usuarioDB, passwordDB);
 		} catch (Exception ex) {
-			Log.error("error while connecting to database : %s", ex.getMessage());
+			Log.error(this.getClass(), "error while connecting to database : %s", ex.getMessage());
 			conexion = null;
 		}
 		return conexion;

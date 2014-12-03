@@ -9,30 +9,30 @@ public class Log {
 	public static int INFO = 2;
 	public static int DEBUG = 1;
 
-	public static int message_priority = 1;
+	public static int message_priority = DEBUG;
 
 	public static void setLevel(int priority) {
 		message_priority = priority;
 	}
 
-	public static void error(String message, Object... args) {
+	public static void error(Class aClass, String message, Object... args) {
 		if (message_priority <= ERROR)
-			System.out.printf(getNow() + "[ERROR]: " + message + "\n", args);
+			System.err.printf(getNow() + " [ERROR] " + aClass.getSimpleName() + " : " + message + "\n", args);
 	}
 
-	public static void warning(String message, Object... args) {
+	public static void warning(Class aClass, String message, Object... args) {
 		if (message_priority <= WARNING)
-			System.out.printf(getNow() + "[WARNING]: " + message + "\n", args);
+			System.out.printf(getNow() + " [WARNING] " + aClass.getSimpleName() + " : " + message + "\n", args);
 	}
 
-	public static void info(String message, Object... args) {
+	public static void info(Class aClass, String message, Object... args) {
 		if (message_priority <= INFO)
-			System.out.printf(getNow() + "[INFO]: " + message + "\n", args);
+			System.out.printf(getNow() + " [INFO] " + aClass.getSimpleName() + " : " + message + "\n", args);
 	}
 
-	public static void debug(String message, Object... args) {
+	public static void debug(Class aClass, String message, Object... args) {
 		if (message_priority <= DEBUG)
-			System.out.printf(getNow() + "[DEBUG]: " + message + "\n", args);
+			System.out.printf(getNow() + " [DEBUG] " + aClass.getSimpleName() + " : " + message + "\n", args);
 	}
 
 	private static String getNow() {

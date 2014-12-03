@@ -33,13 +33,13 @@ public class DefaultTrustManager implements X509TrustManager {
 		try {
 			ctx = SSLContext.getInstance("TLS");
 		} catch (NoSuchAlgorithmException e1) {
-			Log.error("error en CrearConexionHTTPS");
+			Log.error(DefaultTrustManager.class, "error en CrearConexionHTTPS");
 			e1.printStackTrace();
 		}
 		try {
 			ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
 		} catch (KeyManagementException e) {
-			Log.error("error en CrearConexionHTTPS");
+			Log.error(DefaultTrustManager.class, "error en CrearConexionHTTPS");
 			e.printStackTrace();
 		}
 		SSLContext.setDefault(ctx);

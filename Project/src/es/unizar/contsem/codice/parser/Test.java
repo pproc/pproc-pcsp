@@ -35,9 +35,9 @@ public class Test {
 					ex.printStackTrace();
 					return;
 				}
-				Log.info("XML %d parseado e introducido en el modelo", i);
+				Log.info(Test.class, "XML %d parseado e introducido en el modelo", i);
 			} catch (Exception exc) {
-				Log.error("error al introducir el XML %d", i);
+				Log.error(Test.class, "error al introducir el XML %d", i);
 				xmlErrorCount++;
 			}
 		}
@@ -47,8 +47,8 @@ public class Test {
 		// out.close();
 
 		model.write(new PrintWriter("pcsp-output.ttl", "UTF-8"), "Turtle");
-		Log.info("escritura finalizada");
-		Log.info("%d XMLs han fallado", xmlErrorCount);
+		Log.info(Test.class, "escritura finalizada");
+		Log.info(Test.class, "%d XMLs han fallado", xmlErrorCount);
 
 	}
 }
