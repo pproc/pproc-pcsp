@@ -77,16 +77,19 @@ public class Crawler {
 		document = response.parse();
 		ids = getIds(document);
 		retrieveDataFromPlatformIds(ids, sessionIdCookie, database);
-		petition = getNextPetition(document);
 		Log.info(this.getClass(), "first page done");
 
 		// Post to next pages
-		while (actualPage(document) <= finalPage(document)) {
+		int numberOfErrors = 0;
+		while (actualPage(document) <= finalPage(document) && numberOfErrors < 3) {
+			if (actualPage(document) != -1 && finalPage(document) != -1)
+				petition = getNextPetition(document);
+			else
+				Log.error(this.getClass(), "web document incorrect, trying same last petition again (%d)",
+						++numberOfErrors);
 			document = retrieveDataFromPage(petition, sessionIdCookie, database);
 			double por = ((actualPage(document) * (1.0)) / (finalPage(document) * (1.0))) * 100.0;
 			Log.info(this.getClass(), "page %d/%d done - %.4f%%", actualPage(document), finalPage(document), por);
-			petition = getNextPetition(document);
-
 		}
 	}
 
@@ -103,11 +106,11 @@ public class Crawler {
 							"");
 			altString = altString.replaceAll("</span>", "");
 		}
-		return Integer.parseInt(altString);
-	}
-
-	public int nextPage(Document document) {
-		return actualPage(document) + 1;
+		try {
+			return Integer.parseInt(altString);
+		} catch (Exception ex) {
+			return -1;
+		}
 	}
 
 	public int finalPage(Document document) {
@@ -123,7 +126,11 @@ public class Crawler {
 							"");
 			altString = altString.replaceAll("</span>", "");
 		}
-		return Integer.parseInt(altString);
+		try {
+			return Integer.parseInt(altString);
+		} catch (Exception ex) {
+			return -1;
+		}
 	}
 
 	public Document retrieveDataFromPage(String petition, String sessionIdCookie, Database database) {
