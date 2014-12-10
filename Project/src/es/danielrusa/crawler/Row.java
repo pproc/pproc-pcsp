@@ -1,4 +1,4 @@
-package es.danielrusa.TFG_crawler;
+package es.danielrusa.crawler;
 
 public class Row {
 

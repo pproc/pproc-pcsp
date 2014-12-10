@@ -1,4 +1,4 @@
-package es.danielrusa.TFG_crawler;
+package es.danielrusa.crawler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -57,7 +57,7 @@ public class Database {
 			try {
 				Log.info(this.getClass(), "retrieving links from database ...");
 				stmt = myConnection.createStatement();
-				rs = stmt.executeQuery("SELECT link FROM newxml");
+				rs = stmt.executeQuery("SELECT link FROM licitaciones");
 				while (rs.next()) {
 					linkSet.add(rs.getString("link"));
 				}
@@ -86,7 +86,7 @@ public class Database {
 			try {
 				Log.info(this.getClass(), "retrieving platformIds from database ...");
 				stmt = myConnection.createStatement();
-				rs = stmt.executeQuery("SELECT idplataforma FROM newxml");
+				rs = stmt.executeQuery("SELECT idplataforma FROM licitaciones");
 				while (rs.next()) {
 					platformIdSet.add(rs.getString("idplataforma"));
 				}
@@ -105,7 +105,7 @@ public class Database {
 
 	private boolean insertRowSet() {
 		long startTime = System.currentTimeMillis();
-		String query = "INSERT INTO newxml (link,expediente,xml,peticion,idplataforma) VALUES ";
+		String query = "INSERT INTO licitaciones (link,expediente,xml,peticion,idplataforma) VALUES ";
 		for (Row row : rowSet)
 			if (!linkExists(row.link))
 				query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
@@ -148,7 +148,7 @@ public class Database {
 		String output = null;
 		try {
 			stmt = myConnection.createStatement();
-			rs = stmt.executeQuery("SELECT xml FROM newxml where id='" + id + "'");
+			rs = stmt.executeQuery("SELECT xml FROM licitaciones where id='" + id + "'");
 			rs.next();
 			output = rs.getString("xml");
 			rs.close();
