@@ -7,3 +7,7 @@ bin/
 nbproject
 dist/
 build/
+
+doc.html
+pcsp-output.ttl
+codice_doc.xml
