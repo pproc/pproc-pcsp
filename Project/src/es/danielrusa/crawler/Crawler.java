@@ -1,4 +1,4 @@
-package es.danielrusa.TFG_crawler;
+package es.danielrusa.crawler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -225,7 +226,7 @@ public class Crawler {
 			String description = new String(trim(element.text(), 35));
 			if (description.trim().toLowerCase().contains("xml"))
 				if (!database.linkExists(link))
-					rowSet.add(new Row(link, expediente, getXML(link).replaceAll("'", "''"), post, platformId));
+					rowSet.add(new Row(link, expediente, getXML(link), post, platformId));
 				else
 					Log.debug(this.getClass(), "link %d already exists", link.hashCode());
 		}
@@ -259,7 +260,7 @@ public class Crawler {
 				url = new URL(newURL);
 				conn = (HttpURLConnection) url.openConnection();
 				conn.setRequestMethod("GET");
-				rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				rd = new BufferedReader(new InputStreamReader(conn.getInputStream(), Charset.forName("UTF-8")));
 				while ((line = rd.readLine()) != null)
 					result2 += line;
 				rd.close();
