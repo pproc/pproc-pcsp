@@ -1,5 +1,6 @@
-package es.unizar.contsem.codice.parser;
+package es.unizar.contsem;
 
+import java.io.PrintWriter;
 import java.util.Calendar;
 
 public class Log {
@@ -39,6 +40,17 @@ public class Log {
 		Calendar rightNow = Calendar.getInstance();
 		return String.format("%02d:%02d:%02d", rightNow.get(Calendar.HOUR_OF_DAY), rightNow.get(Calendar.MINUTE),
 				rightNow.get(Calendar.SECOND));
+	}
+	
+	public static void writeInfile(String fileName, String writeThis) {
+		try {
+			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+			writer.print(writeThis);
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 }

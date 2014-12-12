@@ -11,7 +11,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import es.unizar.contsem.codice.parser.Log;
+import es.unizar.contsem.Log;
 
 public class DefaultTrustManager implements X509TrustManager {
 
