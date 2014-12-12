@@ -8,7 +8,7 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
-import es.unizar.contsem.codice.parser.Log;
+import es.unizar.contsem.Log;
 
 public class Database {
 
@@ -17,6 +17,8 @@ public class Database {
 	private Set<Row> rowSet = new HashSet<Row>();
 	private Set<String> platformIdSet = null;
 	private Set<String> linkSet = null;
+
+	private int numberOfInsertErrors = 0;
 
 	public void connect() {
 		myConnection = getConnection();
@@ -30,22 +32,25 @@ public class Database {
 			platformIdSet.add(idplataforma);
 		linkSet.add(xml);
 		if (rowSet.size() >= 10)
-			if (insertRowSet())
+			if (insertRowSet() > 0)
 				rowSet = new HashSet<Row>();
 			else
 				Log.error(this.getClass(), "error at insertRow");
 	}
 
-	public void insertRow(Row row) {
+	public int insertRow(Row row) {
+		int numberOfRowsInserted = 0;
 		rowSet.add(row);
 		if (platformIdSet != null)
 			platformIdSet.add(row.idplataforma);
 		linkSet.add(row.xml);
-		if (rowSet.size() >= 10)
-			if (insertRowSet())
+		if (rowSet.size() >= 10) {
+			if ((numberOfRowsInserted = insertRowSet()) > 0)
 				rowSet = new HashSet<Row>();
 			else
 				Log.error(this.getClass(), "error at insertRow");
+		}
+		return numberOfRowsInserted;
 	}
 
 	public boolean linkExists(String link) {
@@ -103,43 +108,55 @@ public class Database {
 		return platformIdSet.contains(idplataforma);
 	}
 
-	private boolean insertRowSet() {
+	public int flushRowSet() {
+		return insertRowSet();
+	}
+
+	private int insertRowSet() {
 		long startTime = System.currentTimeMillis();
 		String query = "INSERT INTO licitaciones (link,expediente,xml,peticion,idplataforma) VALUES ";
 		for (Row row : rowSet)
 			if (!linkExists(row.link))
 				query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
-						+ row.xml.trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
+						+ row.xml.replaceAll("'", " ").trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
 			else
 				Log.warning(this.getClass(), "existing link not expected");
 		query = query.substring(0, query.length() - 1) + ";";
-		if (tryInsertQueue(3, query)) {
-			Log.debug(this.getClass(), "insertQueue takes %f seconds",
+		if (tryInsertQueue(1, query)) {
+			Log.debug(this.getClass(), "insertRowSet takes %f seconds",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
-			return true;
+			return rowSet.size();
 		} else
-			return false;
+			return 0;
 	}
 
-	private boolean tryInsertQueue(int numberOfTries, String query) {
-		if (numberOfTries > 0) {
+	private boolean tryInsertQueue(int tryCount, String query) {
+		if (tryCount < 4) {
 			try {
 				Statement st = (Statement) myConnection.createStatement();
 				st.executeUpdate(query);
+			} catch (com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException ex) {
+				numberOfInsertErrors++;
+				Log.error(this.getClass(), "MySQLSyntaxErrorException, ignoring insert, saved at query%03d.sql",
+						numberOfInsertErrors);
+				Log.writeInfile(String.format("query%03d.sql", numberOfInsertErrors), query);
 			} catch (SQLException e) {
-				Log.error(this.getClass(), "error connecting database, numberOfTries = %d)", numberOfTries);
+				Log.warning(this.getClass(), "try number %d at tryInsertQueue failed: %s", tryCount, e.getMessage());
 				try {
 					if (myConnection.isClosed()) {
+						Log.warning(this.getClass(), "connection to database closed, reconnecting");
 						connect();
 					}
 				} catch (Exception ex) {
 					Log.error(this.getClass(), "unexpected error in tryInsertQueue");
 				}
-				tryInsertQueue(numberOfTries - 1, query);
+				tryInsertQueue(tryCount + 1, query);
 			}
 			return true;
-		} else
+		} else {
+			Log.warning(this.getClass(), "tryInsertQueue failed so many times, next insertRow will try again");
 			return false;
+		}
 	}
 
 	public String getXML(int id) {

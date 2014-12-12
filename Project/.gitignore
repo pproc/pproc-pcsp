@@ -11,3 +11,4 @@ build/
 doc.html
 pcsp-output.ttl
 codice_doc.xml
+*.sql

@@ -1,13 +1,13 @@
 package es.danielrusa.crawler;
 
-import es.unizar.contsem.codice.parser.Log;
+import es.unizar.contsem.Log;
 
 public class Main {
 
 	public static void main(String[] args) {
 		Database database = new Database();
 		database.connect();
-		database.exhaustiveSearch = true;
+		database.exhaustiveSearch = false;
 		Crawler el = new Crawler();
 		try {
 			Log.setLevel(Log.INFO);

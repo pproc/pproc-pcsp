@@ -20,7 +20,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import es.unizar.contsem.codice.parser.Log;
+import es.unizar.contsem.Log;
 
 public class Crawler {
 
@@ -92,6 +92,8 @@ public class Crawler {
 			double por = ((actualPage(document) * (1.0)) / (finalPage(document) * (1.0))) * 100.0;
 			Log.info(this.getClass(), "page %d/%d done - %.4f%%", actualPage(document), finalPage(document), por);
 		}
+		Log.info(this.getClass(), "Process ended, rowSet flushed inserting" + database.flushRowSet()
+				+ " rows in database");
 	}
 
 	public int actualPage(Document document) {
@@ -150,10 +152,9 @@ public class Crawler {
 				success = true;
 				String[] platformIds = getIds(document);
 
+				// caso ultima pagina o error de parseo
 				if (platformIds.length < 20) {
-					PrintWriter writer = new PrintWriter("doc.html", "UTF-8");
-					writer.print(document.html());
-					writer.close();
+					Log.writeInfile("doc.html", document.html());
 					Log.warning(this.getClass(), "MIRA DOC.HTML PARA CONFIRMAR IDS PLATAFORMA");
 				}
 
@@ -162,6 +163,7 @@ public class Crawler {
 				Log.warning(this.getClass(), "try number %d at retrieveDataFromPage failed", tryCount);
 			} catch (Exception e) {
 				Log.error(this.getClass(), "unexpected error at retrieveDataFromPage");
+				e.printStackTrace();
 			}
 		}
 		if (!success)
@@ -190,8 +192,8 @@ public class Crawler {
 					Log.debug(this.getClass(), "post to get contract web %s successful ", platformIds[i]);
 					Set<Row> rowSet = searchHrefXmlPattern(response.parse(), database, platformIds[i]);
 					for (Row row : rowSet)
-						database.insertRow(row);
-					numberOfRowInserted += rowSet.size();
+						numberOfRowInserted += database.insertRow(row);
+					// numberOfRowInserted += rowSet.size();
 				} catch (IOException e) {
 					Log.error(this.getClass(), "error at retrieveDataFromPlatformIds");
 					e.printStackTrace();
