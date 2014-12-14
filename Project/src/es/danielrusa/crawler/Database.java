@@ -12,6 +12,7 @@ import es.unizar.contsem.Log;
 
 public class Database {
 
+	private String server, user, pass;
 	public boolean exhaustiveSearch = false;
 	private Connection myConnection;
 	private Set<Row> rowSet = new HashSet<Row>();
@@ -20,10 +21,34 @@ public class Database {
 
 	private int numberOfInsertErrors = 0;
 
-	public void connect() {
-		myConnection = getConnection();
+	public Database(String server, String user, String pass) {
+		this.server = server;
+		this.user = user;
+		this.pass = pass;
+	}
+
+	public boolean connect() {
+		try {
+			if (myConnection != null)
+				myConnection.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		myConnection = getMySQLConnection(server, user, pass);
 		if (myConnection != null)
 			Log.info(this.getClass(), "connected to database");
+		else
+			Log.error(this.getClass(), "could not provide connection");
+		return myConnection != null;
+	}
+
+	public void disconnect() {
+		if (myConnection != null)
+			try {
+				myConnection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 	}
 
 	public void insertRow(String link, String expediente, String xml, String post, String idplataforma) {
@@ -118,7 +143,8 @@ public class Database {
 		for (Row row : rowSet)
 			if (!linkExists(row.link))
 				query += "('" + row.link.trim() + "','" + row.expediente.replaceAll("'", "_").trim() + "','"
-						+ row.xml.replaceAll("'", " ").trim() + "','" + row.post.trim() + "','" + row.idplataforma + "'),";
+						+ row.xml.replaceAll("'", " ").trim() + "','" + row.post.trim() + "','" + row.idplataforma
+						+ "'),";
 			else
 				Log.warning(this.getClass(), "existing link not expected");
 		query = query.substring(0, query.length() - 1) + ";";
@@ -141,15 +167,9 @@ public class Database {
 						numberOfInsertErrors);
 				Log.writeInfile(String.format("query%03d.sql", numberOfInsertErrors), query);
 			} catch (SQLException e) {
-				Log.warning(this.getClass(), "try number %d at tryInsertQueue failed: %s", tryCount, e.getMessage());
-				try {
-					if (myConnection.isClosed()) {
-						Log.warning(this.getClass(), "connection to database closed, reconnecting");
-						connect();
-					}
-				} catch (Exception ex) {
-					Log.error(this.getClass(), "unexpected error in tryInsertQueue");
-				}
+				Log.warning(this.getClass(), "try number %d at tryInsertQueue failed: %s", tryCount, e.getClass()
+						.getSimpleName());
+				connect();
 				tryInsertQueue(tryCount + 1, query);
 			}
 			return true;
@@ -176,16 +196,51 @@ public class Database {
 		return output;
 	}
 
-	public Connection getConnection() {
+	public Set<Row> getRows(int startId, int endId) {
+		long startTime = System.currentTimeMillis();
+		Statement stmt = null;
+		ResultSet rs = null;
+		Set<Row> rowSet = new HashSet<Row>();
+		try {
+			stmt = myConnection.createStatement();
+			rs = stmt.executeQuery("SELECT * FROM licitaciones WHERE id>=" + startId + " AND id<" + endId);
+			while (rs.next())
+				rowSet.add(new Row(rs.getInt("id"), rs.getString("link"), rs.getString("expediente"), rs
+						.getString("xml"), rs.getString("peticion"), rs.getString("idplataforma")));
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		Log.info(this.getClass(), "getRows takes %f seconds", (double) (System.currentTimeMillis() - startTime) / 1000);
+		return rowSet;
+	}
+
+	public void updateRow(Row row) {
+		long startTime = System.currentTimeMillis();
+		Statement stmt = null;
+		String query = "UPDATE licitaciones SET xml='" + row.xml.replace("'", " ") + "' WHERE id=" + row.id;
+		try {
+			stmt = myConnection.createStatement();
+			stmt.executeUpdate(query);
+			stmt.close();
+		} catch (com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException ex) {
+			Log.error(this.getClass(), "syntax exception, check insert_error.sql");
+			Log.writeInfile("insert_error.sql", query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		Log.info(this.getClass(), "updateRow takes %f seconds",
+				(double) (System.currentTimeMillis() - startTime) / 1000);
+	}
+
+	public static Connection getMySQLConnection(String server, String user, String pass) {
 		Connection conexion = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			String servidor = "jdbc:mysql://155.210.104.14:3306/licitaciones";
-			String usuarioDB = "carlos";
-			String passwordDB = "020202";
-			conexion = DriverManager.getConnection(servidor, usuarioDB, passwordDB);
+			conexion = DriverManager.getConnection(server, user, pass);
 		} catch (Exception ex) {
-			Log.error(this.getClass(), "error while connecting to database : %s", ex.getMessage());
+			Log.error(Database.class, "error while connecting to database : %s", ex.getMessage());
 			conexion = null;
 		}
 		return conexion;

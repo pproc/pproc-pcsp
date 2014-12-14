@@ -33,7 +33,7 @@ public class CodiceToPprocParser {
 	 */
 	public static void parseCodiceXML(Model model, Document document) throws Exception {
 
-		String altString = null, altString2 = null;
+		String altString = null, altString2 = null, organizationResourceURI;
 		Element altElement = null;
 
 		// pproc:Contract rdf:type (1)
@@ -42,16 +42,19 @@ public class CodiceToPprocParser {
 		contractResource.addProperty(RDF.type, PPROC.Contract);
 
 		// pproc:Contract dcterms:title
-		if ((altString = document.getRootElement().element("ProcurementProject").elementText("Name")) != null)
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& (altString = document.getRootElement().element("ProcurementProject").elementText("Name")) != null)
 			contractResource.addProperty(DCTerms.title, altString);
 
 		// pproc:Contract dcterms:description
-		if ((altString = document.getRootElement().element("ProcurementProject").elementText("Description")) != null)
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& (altString = document.getRootElement().element("ProcurementProject").elementText("Description")) != null)
 			contractResource.addProperty(DCTerms.description, altString);
 
 		// pproc:Contract rdf:type (2)
 		// TODO parseo independiente de versión (parseo del .gc)
-		if ((altString = document.getRootElement().element("ProcurementProject").elementText("TypeCode")) != null)
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& (altString = document.getRootElement().element("ProcurementProject").elementText("TypeCode")) != null)
 			switch (altString) {
 			case "1":
 				contractResource.addProperty(RDF.type, PPROC.SuppliesContract);
@@ -84,7 +87,8 @@ public class CodiceToPprocParser {
 		// pproc:Contract rdf:type (3)
 		// TODO parseo independiente de versión (parseo del .gc)
 		if (model.containsResource(PPROC.SuppliesContract))
-			if ((altString = document.getRootElement().element("ProcurementProject").elementText("SubTypeCode")) != null)
+			if (document.getRootElement().element("ProcurementProject") != null
+					&& (altString = document.getRootElement().element("ProcurementProject").elementText("SubTypeCode")) != null)
 				switch (altString) {
 				case "1":
 					contractResource.addProperty(RDF.type, PPROC.RentContract);
@@ -98,73 +102,75 @@ public class CodiceToPprocParser {
 			contractResource.addProperty(DCTerms.identifier, altString);
 
 		// pproc:Contract pc:contractingAuthority
-		for (Iterator iter = document.getRootElement().element("ContractingParty").element("Party")
-				.elementIterator("PartyIdentification"); iter.hasNext();) {
-			altElement = (Element) iter.next();
-			if (altElement.element("ID").attributeValue("schemeName").equals("ID_PLATAFORMA"))
-				altString = altElement.elementText("ID");
-			else if (altElement.element("ID").attributeValue("schemeName").equals("NIF"))
-				altString2 = altElement.elementText("ID");
-		}
-		String organizationResourceURI = BASE_URI_ORGANIZATION + altString.replace(" ", "");
-		if (!model.containsResource(ResourceFactory.createResource(organizationResourceURI))) {
-
-			// org:Organization rdf:type
-			Resource organizationResource = model.createResource(organizationResourceURI);
-			organizationResource.addProperty(RDF.type, ORG.Organization);
-
-			// org:Organization dcterms:title
-			if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-					.element("PartyName").elementText("Name")) != null)
-				organizationResource.addProperty(DCTerms.title, altString);
-
-			// org:Organization dcterms:identifier
-			if (altString2 != null)
-				organizationResource.addProperty(DCTerms.identifier, altString2);
-
-			// org:Organization org:hasSite
-			if (document.getRootElement().element("ContractingParty").element("Party").element("PostalAddress") != null) {
-				Resource placeResource = model.createResource(organizationResource + "/Place");
-				placeResource.addProperty(RDF.type, S.Place);
-				organizationResource.addProperty(ORG.hasSite, placeResource);
-
-				// s:Place s:address
-				Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
-				postalAddressResource.addProperty(RDF.type, S.PostalAddress);
-				placeResource.addProperty(S.address, postalAddressResource);
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("PostalAddress").elementText("CityName")) != null)
-					postalAddressResource.addProperty(S.addressLocality, altString);
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("PostalAddress").elementText("PostalZone")) != null)
-					postalAddressResource.addProperty(S.postalCode, altString);
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
-					postalAddressResource.addProperty(S.streetAddress, altString);
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
-					postalAddressResource.addProperty(S.addressCountry, altString);
+		if (document.getRootElement().element("ContractingParty") != null) {
+			for (Iterator iter = document.getRootElement().element("ContractingParty").element("Party")
+					.elementIterator("PartyIdentification"); iter.hasNext();) {
+				altElement = (Element) iter.next();
+				if (altElement.element("ID").attributeValue("schemeName").equals("ID_PLATAFORMA"))
+					altString = altElement.elementText("ID");
+				else if (altElement.element("ID").attributeValue("schemeName").equals("NIF"))
+					altString2 = altElement.elementText("ID");
 			}
+			organizationResourceURI = BASE_URI_ORGANIZATION + altString.replace(" ", "");
+			if (!model.containsResource(ResourceFactory.createResource(organizationResourceURI))) {
 
-			if (document.getRootElement().element("ContractingParty").element("Party").element("Contact") != null) {
-				// org:Organization s:telephone
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("Contact").elementText("Telephone")) != null)
-					organizationResource.addProperty(S.telephone, altString);
+				// org:Organization rdf:type
+				Resource organizationResource = model.createResource(organizationResourceURI);
+				organizationResource.addProperty(RDF.type, ORG.Organization);
 
-				// org:Organization s:faxNumber
+				// org:Organization dcterms:title
 				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("Contact").elementText("Telefax")) != null)
-					organizationResource.addProperty(S.faxNumber, altString);
+						.element("PartyName").elementText("Name")) != null)
+					organizationResource.addProperty(DCTerms.title, altString);
 
-				// org:Organization s:email
-				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
-						.element("Contact").elementText("ElectronicMail")) != null)
-					organizationResource.addProperty(S.email, altString);
+				// org:Organization dcterms:identifier
+				if (altString2 != null)
+					organizationResource.addProperty(DCTerms.identifier, altString2);
+
+				// org:Organization org:hasSite
+				if (document.getRootElement().element("ContractingParty").element("Party").element("PostalAddress") != null) {
+					Resource placeResource = model.createResource(organizationResource + "/Place");
+					placeResource.addProperty(RDF.type, S.Place);
+					organizationResource.addProperty(ORG.hasSite, placeResource);
+
+					// s:Place s:address
+					Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
+					postalAddressResource.addProperty(RDF.type, S.PostalAddress);
+					placeResource.addProperty(S.address, postalAddressResource);
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("PostalAddress").elementText("CityName")) != null)
+						postalAddressResource.addProperty(S.addressLocality, altString);
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("PostalAddress").elementText("PostalZone")) != null)
+						postalAddressResource.addProperty(S.postalCode, altString);
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
+						postalAddressResource.addProperty(S.streetAddress, altString);
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
+						postalAddressResource.addProperty(S.addressCountry, altString);
+				}
+
+				if (document.getRootElement().element("ContractingParty").element("Party").element("Contact") != null) {
+					// org:Organization s:telephone
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("Contact").elementText("Telephone")) != null)
+						organizationResource.addProperty(S.telephone, altString);
+
+					// org:Organization s:faxNumber
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("Contact").elementText("Telefax")) != null)
+						organizationResource.addProperty(S.faxNumber, altString);
+
+					// org:Organization s:email
+					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
+							.element("Contact").elementText("ElectronicMail")) != null)
+						organizationResource.addProperty(S.email, altString);
+				}
+
 			}
-
+			contractResource.addProperty(PC.contractingAuthority, organizationResourceURI);
 		}
-		contractResource.addProperty(PC.contractingAuthority, organizationResourceURI);
 
 		// pproc:Contract pproc:delegatingAuthority
 		altString2 = null;
@@ -240,7 +246,8 @@ public class CodiceToPprocParser {
 		}
 
 		// pproc:Contract pproc:contractTemporalConditions
-		if (document.getRootElement().element("ProcurementProject").element("PlannedPeriod") != null) {
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& document.getRootElement().element("ProcurementProject").element("PlannedPeriod") != null) {
 			Resource ctcResource = model.createResource(contractResourceURI + "/ContractTemporalConditions");
 			ctcResource.addProperty(RDF.type, PPROC.ContractTemporalConditions);
 
@@ -273,7 +280,8 @@ public class CodiceToPprocParser {
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (1)
-		if (document.getRootElement().element("ProcurementProject").element("BudgetAmount") != null) {
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& document.getRootElement().element("ProcurementProject").element("BudgetAmount") != null) {
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
 
@@ -323,7 +331,8 @@ public class CodiceToPprocParser {
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (2)
-		if (document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount") != null) {
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount") != null) {
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
 
@@ -442,7 +451,8 @@ public class CodiceToPprocParser {
 		}
 
 		// pproc:Contract pproc:contractObject
-		if (document.getRootElement().element("ProcurementProject").element("RequiredCommodityClassification") != null
+		if (document.getRootElement().element("ProcurementProject") != null
+				&& document.getRootElement().element("ProcurementProject").element("RequiredCommodityClassification") != null
 				&& (altString = document.getRootElement().element("ProcurementProject")
 						.element("RequiredCommodityClassification").elementText("ItemClassificationCode")) != null) {
 			Resource objectResource = model.createResource(contractResourceURI + "/ContractObject");
@@ -806,9 +816,11 @@ public class CodiceToPprocParser {
 			}
 
 			// pproc:InformationProvider pproc:estimatedEndDate
-			if ((altElement = document.getRootElement().element("TenderingProcess")
-					.element("DocumentAvailabilityPeriod")) != null)
-				informationProviderResource.addProperty(PPROC.estimatedEndDate, altElement.elementText("EndDate"));
+			if (document.getRootElement().element("TenderingProcess") != null
+					&& document.getRootElement().element("TenderingProcess").element("DocumentAvailabilityPeriod") != null
+					&& (altString = document.getRootElement().element("TenderingProcess")
+							.element("DocumentAvailabilityPeriod").elementText("EndDate")) != null)
+				informationProviderResource.addProperty(PPROC.estimatedEndDate, altString);
 
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
@@ -828,8 +840,10 @@ public class CodiceToPprocParser {
 			informationProviderResource.addProperty(S.location, placeResource);
 
 			// s:Place s:name
-			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
-					.element("PartyName").elementText("Name")) != null)
+			if (document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
+					.element("PartyName") != null
+					&& (altString = document.getRootElement().element("TenderingTerms")
+							.element("DocumentProviderParty").element("PartyName").elementText("Name")) != null)
 				placeResource.addProperty(S.name, altString);
 
 			// s:Place s:address

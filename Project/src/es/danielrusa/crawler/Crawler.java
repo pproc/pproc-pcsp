@@ -3,7 +3,6 @@ package es.danielrusa.crawler;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -31,13 +30,9 @@ public class Crawler {
 
 	public static String post = null;
 
-	public Crawler() {
-		DefaultTrustManager dtm = new DefaultTrustManager();
+	public static void start(Database database) throws Exception {
+
 		DefaultTrustManager.CrearConexionHTTPS();
-	}
-
-	public void start(Database database) throws Exception {
-
 		Document document;
 		Response response = null;
 		String altString, sessionIdCookie, petition;
@@ -51,7 +46,7 @@ public class Crawler {
 		sessionIdCookie = response.cookies().get("JSESSIONID");
 		document = response.parse();
 		altString = searchHrefPattern(document, "Búsqueda avanzada de licitaciones");
-		Log.info(this.getClass(), "get to main web to get sessionIdCookie successful");
+		Log.info(Crawler.class, "get to main web to get sessionIdCookie successful");
 
 		// Get to advanced search to get paged petition base url
 		response = Jsoup.connect(altString).ignoreContentType(true)
@@ -66,7 +61,7 @@ public class Crawler {
 				break;
 			}
 		}
-		Log.info(this.getClass(), "get to advanced search to get paged petition base url successful");
+		Log.info(Crawler.class, "get to advanced search to get paged petition base url successful");
 
 		// Post to first page
 		petition = altString.trim()
@@ -78,7 +73,7 @@ public class Crawler {
 		document = response.parse();
 		ids = getIds(document);
 		retrieveDataFromPlatformIds(ids, sessionIdCookie, database);
-		Log.info(this.getClass(), "first page done");
+		Log.info(Crawler.class, "first page done");
 
 		// Post to next pages
 		int numberOfErrors = 0;
@@ -86,17 +81,17 @@ public class Crawler {
 			if (actualPage(document) != -1 && finalPage(document) != -1)
 				petition = getNextPetition(document);
 			else
-				Log.error(this.getClass(), "web document incorrect, trying same last petition again (%d)",
+				Log.error(Crawler.class, "web document incorrect, trying same last petition again (%d)",
 						++numberOfErrors);
 			document = retrieveDataFromPage(petition, sessionIdCookie, database);
 			double por = ((actualPage(document) * (1.0)) / (finalPage(document) * (1.0))) * 100.0;
-			Log.info(this.getClass(), "page %d/%d done - %.4f%%", actualPage(document), finalPage(document), por);
+			Log.info(Crawler.class, "page %d/%d done - %.4f%%", actualPage(document), finalPage(document), por);
 		}
-		Log.info(this.getClass(), "Process ended, rowSet flushed inserting" + database.flushRowSet()
+		Log.info(Crawler.class, "Process ended, rowSet flushed inserting" + database.flushRowSet()
 				+ " rows in database");
 	}
 
-	public int actualPage(Document document) {
+	private static int actualPage(Document document) {
 		String altString = null;
 		String[] aux;
 		aux = search(
@@ -116,7 +111,7 @@ public class Crawler {
 		}
 	}
 
-	public int finalPage(Document document) {
+	private static int finalPage(Document document) {
 		String altString = null;
 		String[] aux;
 		aux = search(
@@ -136,7 +131,7 @@ public class Crawler {
 		}
 	}
 
-	public Document retrieveDataFromPage(String petition, String sessionIdCookie, Database database) {
+	private static Document retrieveDataFromPage(String petition, String sessionIdCookie, Database database) {
 		Document document = null;
 		post = petition;
 		boolean success = false;
@@ -155,23 +150,23 @@ public class Crawler {
 				// caso ultima pagina o error de parseo
 				if (platformIds.length < 20) {
 					Log.writeInfile("doc.html", document.html());
-					Log.warning(this.getClass(), "MIRA DOC.HTML PARA CONFIRMAR IDS PLATAFORMA");
+					Log.warning(Crawler.class, "MIRA DOC.HTML PARA CONFIRMAR IDS PLATAFORMA");
 				}
 
 				retrieveDataFromPlatformIds(platformIds, sessionIdCookie, database);
 			} catch (IOException e) {
-				Log.warning(this.getClass(), "try number %d at retrieveDataFromPage failed", tryCount);
+				Log.warning(Crawler.class, "try number %d at retrieveDataFromPage failed", tryCount);
 			} catch (Exception e) {
-				Log.error(this.getClass(), "unexpected error at retrieveDataFromPage");
+				Log.error(Crawler.class, "unexpected error at retrieveDataFromPage");
 				e.printStackTrace();
 			}
 		}
 		if (!success)
-			Log.error(this.getClass(), "retrieveDataFromPage could not retrieve data");
+			Log.error(Crawler.class, "retrieveDataFromPage could not retrieve data");
 		return document;
 	}
 
-	public void retrieveDataFromPlatformIds(String[] platformIds, String sessionIdCookie, Database database)
+	private static void retrieveDataFromPlatformIds(String[] platformIds, String sessionIdCookie, Database database)
 			throws Exception {
 		int numberOfRowInserted = 0;
 		int numberOfPlatformidsAnalized = 0;
@@ -189,19 +184,19 @@ public class Crawler {
 							.userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0")
 							.timeout(12000).followRedirects(true).cookie("JSESSIONID", sessionIdCookie)
 							.method(Method.POST).execute();
-					Log.debug(this.getClass(), "post to get contract web %s successful ", platformIds[i]);
+					Log.debug(Crawler.class, "post to get contract web %s successful ", platformIds[i]);
 					Set<Row> rowSet = searchHrefXmlPattern(response.parse(), database, platformIds[i]);
 					for (Row row : rowSet)
 						numberOfRowInserted += database.insertRow(row);
 					// numberOfRowInserted += rowSet.size();
 				} catch (IOException e) {
-					Log.error(this.getClass(), "error at retrieveDataFromPlatformIds");
+					Log.error(Crawler.class, "error at retrieveDataFromPlatformIds");
 					e.printStackTrace();
 				}
 			} else
-				Log.debug(this.getClass(), "contract web %s already exist", platformIds[i]);
+				Log.debug(Crawler.class, "contract web %s already exist", platformIds[i]);
 		}
-		Log.info(this.getClass(), "%d/%d platformIds analized and %d rows inserted", numberOfPlatformidsAnalized,
+		Log.info(Crawler.class, "%d/%d platformIds analized and %d rows inserted", numberOfPlatformidsAnalized,
 				platformIds.length, numberOfRowInserted);
 	}
 
@@ -214,7 +209,7 @@ public class Crawler {
 		return reference;
 	}
 
-	private Set<Row> searchHrefXmlPattern(Document document, Database database, String platformId) {
+	private static Set<Row> searchHrefXmlPattern(Document document, Database database, String platformId) {
 		Set<Row> rowSet = new HashSet<Row>();
 		String[] expedientes = search("inputtext31\" value=\".*\" class=\"inputTextMedio\"", document.html());
 		String expediente = null;
@@ -230,13 +225,12 @@ public class Crawler {
 				if (!database.linkExists(link))
 					rowSet.add(new Row(link, expediente, getXML(link), post, platformId));
 				else
-					Log.debug(this.getClass(), "link %d already exists", link.hashCode());
+					Log.debug(Crawler.class, "link %d already exists", link.hashCode());
 		}
 		return rowSet;
 	}
 
-	private String getXML(String urlToRead) {
-		DefaultTrustManager dtm = new DefaultTrustManager();
+	public static String getXML(String urlToRead) {
 		DefaultTrustManager.CrearConexionHTTPS();
 		URL url;
 		HttpURLConnection conn;
@@ -269,15 +263,15 @@ public class Crawler {
 				result2.replaceAll("'", "''");
 				success = true;
 			} catch (Exception e) {
-				Log.warning(this.getClass(), "try number %d at getXML failed", tryCount);
+				Log.warning(Crawler.class, "try number %d at getXML failed", tryCount);
 			}
 		}
 		if (!success)
-			Log.error(this.getClass(), "getXML could not retrieve the XML");
+			Log.error(Crawler.class, "getXML could not retrieve the XML");
 		return result2;
 	}
 
-	private String[] getIds(Document doc) {
+	private static String[] getIds(Document doc) {
 		String[] matches = search("'idLicitacion':'[0-9]+'", doc.html());
 		for (int i = 0; i < matches.length; i++) {
 			matches[i] = matches[i].replaceAll("'idLicitacion':'", "").replaceAll("'", "");
@@ -285,7 +279,7 @@ public class Crawler {
 		return matches;
 	}
 
-	private String getNextPetition(Document document) {
+	private static String getNextPetition(Document document) {
 		String form = null, petition;
 		for (Element element : document.select("form[id]")) {
 			if (element.attr("abs:id").contains("viewns_Z7_AVEQAI930OBRD02JPMTPG21004_:form1")) {
@@ -300,9 +294,9 @@ public class Crawler {
 			pag[i] = pag[i].replaceAll("j_id", "");
 		try {
 			petition = form + FORM[0] + pag[0] + FORM[1] + pag[1] + FORM[2];
-			Log.debug(this.getClass(), "nextPetition pages %s - %s", pag[0], pag[1]);
+			Log.debug(Crawler.class, "nextPetition pages %s - %s", pag[0], pag[1]);
 		} catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-			Log.error(this.getClass(), "ArrayIndexOutOfBoundsException at getNextPetition");
+			Log.error(Crawler.class, "ArrayIndexOutOfBoundsException at getNextPetition");
 			return null;
 		}
 		return petition;
