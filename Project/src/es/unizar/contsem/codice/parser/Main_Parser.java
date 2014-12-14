@@ -11,7 +11,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 import es.danielrusa.crawler.Database;
-import es.danielrusa.crawler.Main_UpdateXml;
 import es.unizar.contsem.Log;
 
 /**

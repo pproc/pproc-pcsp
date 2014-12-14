@@ -248,6 +248,8 @@ public class CodiceToPprocParser {
 		// pproc:Contract pproc:contractTemporalConditions
 		if (document.getRootElement().element("ProcurementProject") != null
 				&& document.getRootElement().element("ProcurementProject").element("PlannedPeriod") != null) {
+			Resource objectResource = model.createResource(contractResourceURI + "/ContractObject");
+			objectResource.addProperty(RDF.type, PPROC.ContractObject);
 			Resource ctcResource = model.createResource(contractResourceURI + "/ContractTemporalConditions");
 			ctcResource.addProperty(RDF.type, PPROC.ContractTemporalConditions);
 
@@ -276,12 +278,15 @@ public class CodiceToPprocParser {
 			// TODO pproc:ContractTemporalConditions pproc:estimatedEndDate
 			// (falta mirar como es udt:DateType)
 
-			contractResource.addProperty(PPROC.contractTemporalConditions, ctcResource);
+			contractResource.addProperty(PPROC.contractObject, objectResource);
+			objectResource.addProperty(PPROC.contractTemporalConditions, ctcResource);
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (1)
 		if (document.getRootElement().element("ProcurementProject") != null
 				&& document.getRootElement().element("ProcurementProject").element("BudgetAmount") != null) {
+			Resource objectResource = model.createResource(contractResourceURI + "/ContractObject");
+			objectResource.addProperty(RDF.type, PPROC.ContractObject);
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
 
@@ -327,12 +332,15 @@ public class CodiceToPprocParser {
 				cecResource.addProperty(PPROC.budgetPrice, priceResource);
 			}
 
-			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
+			contractResource.addProperty(PPROC.contractObject, objectResource);
+			objectResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 		}
 
 		// pproc:Contract pproc:contractEconomicConditions (2)
 		if (document.getRootElement().element("ProcurementProject") != null
 				&& document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount") != null) {
+			Resource objectResource = model.createResource(contractResourceURI + "/ContractObject");
+			objectResource.addProperty(RDF.type, PPROC.ContractObject);
 			Resource cecResource = model.createResource(contractResourceURI + "/ContractEconomicConditions");
 			cecResource.addProperty(RDF.type, PPROC.ContractEconomicConditions);
 
@@ -348,7 +356,8 @@ public class CodiceToPprocParser {
 				cecResource.addProperty(PPROC.feePrice, priceResource);
 			}
 
-			contractResource.addProperty(PPROC.contractEconomicConditions, cecResource);
+			contractResource.addProperty(PPROC.contractObject, objectResource);
+			objectResource.addProperty(PPROC.contractEconomicConditions, cecResource);
 		}
 
 		// pproc:Contract pproc:contractProcedureSpecifications
