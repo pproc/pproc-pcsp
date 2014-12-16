@@ -77,7 +77,7 @@ public class Crawler {
 
 		// Post to next pages
 		int numberOfErrors = 0;
-		while (actualPage(document) <= finalPage(document) && numberOfErrors < 3) {
+		while (actualPage(document) < finalPage(document) && numberOfErrors < 3) {
 			if (actualPage(document) != -1 && finalPage(document) != -1)
 				petition = getNextPetition(document);
 			else

@@ -17,10 +17,14 @@ import es.unizar.contsem.Log;
  * This class main parse the CODICE XML documents from a database and transform them into RDF following the PPROC
  * ontology (http://contsem.unizar.es/) model.
  * 
- * @author guillermo
+ * @author gesteban
  * @date 2014-12-14
  */
 public class Main_Parser {
+
+	static final int start = 1;
+	static final int end = 30000;
+	static final int length = 3000;
 
 	/**
 	 * @param args
@@ -30,8 +34,7 @@ public class Main_Parser {
 	public static void main(String[] args) throws Exception {
 
 		if (args.length != 3) {
-			Log.error(Main_Parser.class,
-					"bad arguments, usage: Main_Parser <database/table URL> <username> <password>");
+			Log.error(Main_Parser.class, "bad arguments, usage: Main_Parser <database/table URL> <username> <password>");
 			return;
 		}
 
@@ -41,30 +44,41 @@ public class Main_Parser {
 		int xmlErrorCount = 0;
 		String xml = "error";
 
-		for (int i = 1; i < 30000; i++) {
-			try {
-				xml = database.getXML(i);
-				SAXReader reader = new SAXReader();
-				Document document = reader.read(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+		int from = start;
+		int to = from + length;
+
+		while (from < end) {
+
+			for (int i = from; i < to; i++) {
 				try {
-					CodiceToPprocParser.parseCodiceXML(model, document);
-				} catch (Exception ex) {
-					Log.writeInfile("codice_doc.xml", document.asXML());
-					ex.printStackTrace();
-					return;
+					xml = database.getXML(i);
+					SAXReader reader = new SAXReader();
+					Document document = reader.read(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+					try {
+						CodiceToPprocParser.parseCodiceXML(model, document);
+					} catch (Exception ex) {
+						Log.error(Main_Parser.class, "error parsing XML, see codice_doc.xml");
+						Log.writeInfile("codice_doc.xml", document.asXML());
+						ex.printStackTrace();
+						return;
+					}
+					Log.info(Main_Parser.class, "XML %d parseado e introducido en el modelo", i);
+				} catch (Exception exc) {
+					Log.error(Main_Parser.class, "error reading XML with id = %d [%d bytes] : %s", i,
+							xml.getBytes(StandardCharsets.UTF_8).length, exc.getClass().getSimpleName());
+					xmlErrorCount++;
 				}
-				Log.info(Main_Parser.class, "XML %d parseado e introducido en el modelo", i);
-			} catch (Exception exc) {
-				Log.error(Main_Parser.class, "error al introducir el XML [%d bytes] : %s",
-						xml.getBytes(StandardCharsets.UTF_8).length, exc.getClass().getSimpleName());
-				xmlErrorCount++;
 			}
+
+			model.write(new PrintWriter(String.format("pcsp-output-%d-%d.ttl", from, to), "UTF-8"), "Turtle");
+			Log.info(Main_Parser.class, "escritura finalizada");
+			Log.info(Main_Parser.class, "%d XMLs han fallado", xmlErrorCount);
+
+			from += length;
+			to = (from + length > end ? end : from + length);
 		}
 
-		model.write(new PrintWriter("pcsp-output.ttl", "UTF-8"), "Turtle");
-		Log.info(Main_Parser.class, "escritura finalizada");
-		Log.info(Main_Parser.class, "%d XMLs han fallado", xmlErrorCount);
-
+		Log.info(Main_Parser.class, "proceso finalizado");
 	}
 
 }

@@ -5,6 +5,8 @@ import java.util.Iterator;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import com.hp.hpl.jena.datatypes.RDFDatatype;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
@@ -19,6 +21,12 @@ import es.unizar.contsem.vocabulary.PC;
 import es.unizar.contsem.vocabulary.PPROC;
 import es.unizar.contsem.vocabulary.S;
 
+/**
+ * Main class to transform CODICE XML document to RDF.
+ * 
+ * @author gesteban
+ * @date 2014-12-14
+ */
 public class CodiceToPprocParser {
 
 	private static String BASE_URI_CONTRATO = "http://contsem.unizar.es/datos/sector-publico/contrato/";
@@ -44,12 +52,12 @@ public class CodiceToPprocParser {
 		// pproc:Contract dcterms:title
 		if (document.getRootElement().element("ProcurementProject") != null
 				&& (altString = document.getRootElement().element("ProcurementProject").elementText("Name")) != null)
-			contractResource.addProperty(DCTerms.title, altString);
+			contractResource.addProperty(DCTerms.title, altString, XSDDatatype.XSDstring);
 
 		// pproc:Contract dcterms:description
 		if (document.getRootElement().element("ProcurementProject") != null
 				&& (altString = document.getRootElement().element("ProcurementProject").elementText("Description")) != null)
-			contractResource.addProperty(DCTerms.description, altString);
+			contractResource.addProperty(DCTerms.description, altString, XSDDatatype.XSDstring);
 
 		// pproc:Contract rdf:type (2)
 		// TODO parseo independiente de versión (parseo del .gc)
@@ -99,7 +107,7 @@ public class CodiceToPprocParser {
 
 		// pproc:Contract dcterms:identifier
 		if ((altString = document.getRootElement().elementText("ContractFolderID")) != null)
-			contractResource.addProperty(DCTerms.identifier, altString);
+			contractResource.addProperty(DCTerms.identifier, altString, XSDDatatype.XSDstring);
 
 		// pproc:Contract pc:contractingAuthority
 		if (document.getRootElement().element("ContractingParty") != null) {
@@ -111,7 +119,8 @@ public class CodiceToPprocParser {
 				else if (altElement.element("ID").attributeValue("schemeName").equals("NIF"))
 					altString2 = altElement.elementText("ID");
 			}
-			organizationResourceURI = BASE_URI_ORGANIZATION + altString.replace(" ", "");
+			organizationResourceURI = BASE_URI_ORGANIZATION
+					+ altString.replace(" ", "").replace("\t", "").replace("	", "");
 			if (!model.containsResource(ResourceFactory.createResource(organizationResourceURI))) {
 
 				// org:Organization rdf:type
@@ -121,11 +130,11 @@ public class CodiceToPprocParser {
 				// org:Organization dcterms:title
 				if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 						.element("PartyName").elementText("Name")) != null)
-					organizationResource.addProperty(DCTerms.title, altString);
+					organizationResource.addProperty(DCTerms.title, altString, XSDDatatype.XSDstring);
 
 				// org:Organization dcterms:identifier
 				if (altString2 != null)
-					organizationResource.addProperty(DCTerms.identifier, altString2);
+					organizationResource.addProperty(DCTerms.identifier, altString2, XSDDatatype.XSDstring);
 
 				// org:Organization org:hasSite
 				if (document.getRootElement().element("ContractingParty").element("Party").element("PostalAddress") != null) {
@@ -139,33 +148,33 @@ public class CodiceToPprocParser {
 					placeResource.addProperty(S.address, postalAddressResource);
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("PostalAddress").elementText("CityName")) != null)
-						postalAddressResource.addProperty(S.addressLocality, altString);
+						postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("PostalAddress").elementText("PostalZone")) != null)
-						postalAddressResource.addProperty(S.postalCode, altString);
+						postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
-						postalAddressResource.addProperty(S.streetAddress, altString);
+						postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
-						postalAddressResource.addProperty(S.addressCountry, altString);
+						postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 				}
 
 				if (document.getRootElement().element("ContractingParty").element("Party").element("Contact") != null) {
 					// org:Organization s:telephone
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("Contact").elementText("Telephone")) != null)
-						organizationResource.addProperty(S.telephone, altString);
+						organizationResource.addProperty(S.telephone, altString, XSDDatatype.XSDstring);
 
 					// org:Organization s:faxNumber
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("Contact").elementText("Telefax")) != null)
-						organizationResource.addProperty(S.faxNumber, altString);
+						organizationResource.addProperty(S.faxNumber, altString, XSDDatatype.XSDstring);
 
 					// org:Organization s:email
 					if ((altString = document.getRootElement().element("ContractingParty").element("Party")
 							.element("Contact").elementText("ElectronicMail")) != null)
-						organizationResource.addProperty(S.email, altString);
+						organizationResource.addProperty(S.email, altString, XSDDatatype.XSDstring);
 				}
 
 			}
@@ -194,11 +203,11 @@ public class CodiceToPprocParser {
 				// org:Organization dcterms:title
 				if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 						.element("PartyName").elementText("Name")) != null)
-					organizationResource.addProperty(DCTerms.title, altString);
+					organizationResource.addProperty(DCTerms.title, altString, XSDDatatype.XSDstring);
 
 				// org:Organization dcterms:identifier
 				if (altString2 != null)
-					organizationResource.addProperty(DCTerms.identifier, altString2);
+					organizationResource.addProperty(DCTerms.identifier, altString2, XSDDatatype.XSDstring);
 
 				// org:Organization org:hasSite
 				if (document.getRootElement().element("OriginatorCustomerParty").element("Party")
@@ -213,33 +222,33 @@ public class CodiceToPprocParser {
 					placeResource.addProperty(S.address, postalAddressResource);
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("PostalAddress").elementText("CityName")) != null)
-						postalAddressResource.addProperty(S.addressLocality, altString);
+						postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("PostalAddress").elementText("PostalZone")) != null)
-						postalAddressResource.addProperty(S.postalCode, altString);
+						postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
-						postalAddressResource.addProperty(S.streetAddress, altString);
+						postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
-						postalAddressResource.addProperty(S.addressCountry, altString);
+						postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 				}
 
 				if (document.getRootElement().element("OriginatorCustomerParty").element("Party").element("Contact") != null) {
 					// org:Organization s:telephone
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("Contact").elementText("Telephone")) != null)
-						organizationResource.addProperty(S.telephone, altString);
+						organizationResource.addProperty(S.telephone, altString, XSDDatatype.XSDstring);
 
 					// org:Organization s:faxNumber
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("Contact").elementText("Telefax")) != null)
-						organizationResource.addProperty(S.faxNumber, altString);
+						organizationResource.addProperty(S.faxNumber, altString, XSDDatatype.XSDstring);
 
 					// org:Organization s:email
 					if ((altString = document.getRootElement().element("OriginatorCustomerParty").element("Party")
 							.element("Contact").elementText("ElectronicMail")) != null)
-						organizationResource.addProperty(PPROC.delegatingAuthority, altString);
+						organizationResource.addProperty(S.email, altString, XSDDatatype.XSDstring);
 				}
 			}
 			contractResource.addProperty(PC.contractingAuthority, organizationResourceURI);
@@ -260,19 +269,19 @@ public class CodiceToPprocParser {
 							.element("DurationMeasure").attributeValue("unitCode")) != null)
 				switch (altString2) {
 				case "DAY":
-					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "D");
+					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "D", XSDDatatype.XSDduration);
 					break;
 				case "MON":
-					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "M");
+					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "M", XSDDatatype.XSDduration);
 					break;
 				case "ANN":
-					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
+					ctcResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y", XSDDatatype.XSDduration);
 					break;
 				}
 
 			if ((altString = document.getRootElement().element("ProcurementProject").element("PlannedPeriod")
 					.elementText("EndDate")) != null) {
-				ctcResource.addProperty(PPROC.estimatedEndDate, altString);
+				ctcResource.addProperty(PPROC.estimatedEndDate, altString, XSDDatatype.XSDdate);
 			}
 
 			// TODO pproc:ContractTemporalConditions pproc:estimatedEndDate
@@ -296,11 +305,11 @@ public class CodiceToPprocParser {
 				Resource priceResource = model.createResource(contractResourceURI
 						+ "/ContractEconomicConditions/EstimatedValue");
 				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-				priceResource.addProperty(GR.hasCurrencyValue, altString);
-				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
 						.element("EstimatedOverallContractAmount").attributeValue("currencyID")) != null)
-					priceResource.addProperty(GR.hasCurrency, altString);
+					priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 				cecResource.addProperty(PPROC.estimatedValue, priceResource);
 			}
 
@@ -310,11 +319,11 @@ public class CodiceToPprocParser {
 				Resource priceResource = model.createResource(contractResourceURI
 						+ "/ContractEconomicConditions/TotalAmount");
 				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-				priceResource.addProperty(GR.hasCurrencyValue, altString);
-				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
 						.element("TotalAmount").attributeValue("currencyID")) != null)
-					priceResource.addProperty(GR.hasCurrency, altString);
+					priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 				cecResource.addProperty(PPROC.budgetPrice, priceResource);
 			}
 
@@ -324,11 +333,11 @@ public class CodiceToPprocParser {
 				Resource priceResource = model.createResource(contractResourceURI
 						+ "/ContractEconomicConditions/TaxExclusiveAmount");
 				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-				priceResource.addProperty(GR.hasCurrencyValue, altString);
-				priceResource.addProperty(GR.valueAddedTaxIncluded, "false");
+				priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "false", XSDDatatype.XSDboolean);
 				if ((altString = document.getRootElement().element("ProcurementProject").element("BudgetAmount")
 						.element("TaxExclusiveAmount").attributeValue("currencyID")) != null)
-					priceResource.addProperty(GR.hasCurrency, altString);
+					priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 				cecResource.addProperty(PPROC.budgetPrice, priceResource);
 			}
 
@@ -348,11 +357,11 @@ public class CodiceToPprocParser {
 			if ((altString = document.getRootElement().element("ProcurementProject").elementText("RequiredFeeAmount")) != null) {
 				Resource priceResource = model.createResource(cecResource + "/FeePrice");
 				priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-				priceResource.addProperty(GR.hasCurrencyValue, altString);
-				priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+				priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+				priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 				if ((altString = document.getRootElement().element("ProcurementProject").element("RequiredFeeAmount")
 						.attributeValue("currencyID")) != null)
-					priceResource.addProperty(GR.hasCurrency, altString);
+					priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 				cecResource.addProperty(PPROC.feePrice, priceResource);
 			}
 
@@ -431,7 +440,7 @@ public class CodiceToPprocParser {
 				// pproc:FrameworkResource pproc:maxNumberOfOperators
 				if ((altString = document.getRootElement().element("TenderingProcess").element("FrameworAgreement")
 						.elementText("MaximumOperatorsQuantity")) != null)
-					frameworkResource.addProperty(PPROC.maxNumberOfOperators, altString);
+					frameworkResource.addProperty(PPROC.maxNumberOfOperators, altString, XSDDatatype.XSDstring);
 
 				// pproc:FrameworkResource pproc:estimatedDuration
 				if ((altString = document.getRootElement().element("TenderingProcess").element("FrameworAgreement")
@@ -440,13 +449,16 @@ public class CodiceToPprocParser {
 								.element("FrameworAgreement").element("DurationMeasure").attributeValue("unitCode")) != null)
 					switch (altString2) {
 					case "DAY":
-						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "D");
+						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "D",
+								XSDDatatype.XSDduration);
 						break;
 					case "MON":
-						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "M");
+						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "M",
+								XSDDatatype.XSDduration);
 						break;
 					case "ANN":
-						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y");
+						frameworkResource.addProperty(PPROC.estimatedDuration, "P" + altString + "Y",
+								XSDDatatype.XSDduration);
 						break;
 					}
 
@@ -481,11 +493,11 @@ public class CodiceToPprocParser {
 
 					// gr:Offering dcterms:title
 					if ((altString = altElement.element("Item").elementText("Name")) != null)
-						offeringResource.addProperty(DCTerms.title, altString);
+						offeringResource.addProperty(DCTerms.title, altString, XSDDatatype.XSDstring);
 
 					// gr:Offering dcterms:description
 					if ((altString = altElement.element("Item").elementText("Description")) != null)
-						offeringResource.addProperty(DCTerms.description, altString);
+						offeringResource.addProperty(DCTerms.description, altString, XSDDatatype.XSDstring);
 
 					// gr:Offering gr:hasEligibleQuantity
 					if ((altString = altElement.elementText("Quantity")) != null) {
@@ -497,7 +509,7 @@ public class CodiceToPprocParser {
 
 						// gr:QuantitativeValue gr:hasUnitOfMeasurement
 						if ((altString = altElement.element("Quantity").attributeValue("unitCode")) != null)
-							quantityResource.addProperty(GR.hasUnitOfMeasurement, altString);
+							quantityResource.addProperty(GR.hasUnitOfMeasurement, altString, XSDDatatype.XSDstring);
 
 						offeringResource.addProperty(GR.hasEligibleQuantity, quantityResource);
 					}
@@ -506,10 +518,10 @@ public class CodiceToPprocParser {
 					if ((altString = altElement.elementText("MaximumTaxExclusiveAmount")) != null) {
 						Resource priceResource = model.createResource(offeringResource + "/MaximumTaxExclusiveAmount");
 						priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-						priceResource.addProperty(GR.hasCurrencyValue, altString);
-						priceResource.addProperty(GR.valueAddedTaxIncluded, "false");
+						priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+						priceResource.addProperty(GR.valueAddedTaxIncluded, "false", XSDDatatype.XSDboolean);
 						if ((altString = altElement.element("MaximumTaxExclusiveAmount").attributeValue("currencyID")) != null)
-							priceResource.addProperty(GR.hasCurrency, altString);
+							priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 						offeringResource.addProperty(GR.hasPriceSpecification, priceResource);
 					}
 
@@ -517,10 +529,10 @@ public class CodiceToPprocParser {
 					if ((altString = altElement.elementText("MaximumTaxInclusiveAmount")) != null) {
 						Resource priceResource = model.createResource(offeringResource + "/MaximumTaxInclusiveAmount");
 						priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-						priceResource.addProperty(GR.hasCurrencyValue, altString);
-						priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+						priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+						priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 						if ((altString = altElement.element("MaximumTaxInclusiveAmount").attributeValue("currencyID")) != null)
-							priceResource.addProperty(GR.hasCurrency, altString);
+							priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 						offeringResource.addProperty(GR.hasPriceSpecification, priceResource);
 					}
 
@@ -530,11 +542,11 @@ public class CodiceToPprocParser {
 									.elementText("PriceAmount")) != null) {
 						Resource priceResource = model.createResource(offeringResource + "/UnitPrice");
 						priceResource.addProperty(RDF.type, GR.UnitPriceSpecification);
-						priceResource.addProperty(GR.hasCurrencyValue, altString);
-						priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+						priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
+						priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 						if ((altString = altElement.element("RequiredItemLocationQuantity").element("Price")
 								.element("PriceAmount").attributeValue("currencyID")) != null)
-							priceResource.addProperty(GR.hasCurrency, altString);
+							priceResource.addProperty(GR.hasCurrency, altString, XSDDatatype.XSDstring);
 						offeringResource.addProperty(GR.hasPriceSpecification, priceResource);
 
 						// gr:UnitPriceSpecification gr:hasEligibleQuantity
@@ -554,7 +566,8 @@ public class CodiceToPprocParser {
 								// gr:QuantitativeValue gr:hasUnitOfMeasurement
 								if ((altString = altElement.element("RequiredItemLocationQuantity")
 										.element("MinimumQuantity").attributeValue("unitCode")) != null)
-									quantityResource.addProperty(GR.hasUnitOfMeasurement, altString);
+									quantityResource.addProperty(GR.hasUnitOfMeasurement, altString,
+											XSDDatatype.XSDstring);
 							}
 
 							// gr:QuantitativeValue gr:hasMaxValue
@@ -564,7 +577,8 @@ public class CodiceToPprocParser {
 								// gr:QuantitativeValue gr:hasUnitOfMeasurement
 								if ((altString = altElement.element("RequiredItemLocationQuantity")
 										.element("MaximumQuantity").attributeValue("unitCode")) != null)
-									quantityResource.addProperty(GR.hasUnitOfMeasurement, altString);
+									quantityResource.addProperty(GR.hasUnitOfMeasurement, altString,
+											XSDDatatype.XSDstring);
 							}
 
 							priceResource.addProperty(GR.hasEligibleQuantity, quantityResource);
@@ -591,7 +605,8 @@ public class CodiceToPprocParser {
 					&& (altString = document.getRootElement().element("TenderingTerms")
 							.element("TendererQualificationRequest").element("RequiredBusinessClassificationScheme")
 							.elementText("CodeValue")) != null) {
-				tenderersRequirementsResource.addProperty(PPROC.requiredClassification, altString);
+				tenderersRequirementsResource.addProperty(PPROC.requiredClassification, altString,
+						XSDDatatype.XSDstring);
 			}
 
 			// pproc:TenderersRequirements proc:requiredEconomicAndFinancialStanding
@@ -600,7 +615,8 @@ public class CodiceToPprocParser {
 					&& (altString = document.getRootElement().element("TenderingTerms")
 							.element("TendererQualificationRequest").element("FinancialEvaluationCriteria")
 							.elementText("Description")) != null)
-				tenderersRequirementsResource.addProperty(PPROC.requiredEconomicAndFinancialStanding, altString);
+				tenderersRequirementsResource.addProperty(PPROC.requiredEconomicAndFinancialStanding, altString,
+						XSDDatatype.XSDstring);
 
 			// pproc:TenderersRequirements pproc:requiredTechnicalAndProfessionalAbility
 			if (document.getRootElement().element("TenderingTerms").element("TendererQualificationRequest")
@@ -608,7 +624,8 @@ public class CodiceToPprocParser {
 					&& (altString = document.getRootElement().element("TenderingTerms")
 							.element("TendererQualificationRequest").element("TechnicalEvaluationCriteria")
 							.elementText("Description")) != null)
-				tenderersRequirementsResource.addProperty(PPROC.requiredTechnicalAndProfessionalAbility, altString);
+				tenderersRequirementsResource.addProperty(PPROC.requiredTechnicalAndProfessionalAbility, altString,
+						XSDDatatype.XSDstring);
 
 			if (document.getRootElement().element("TenderingTerms").element("TendererQualificationRequest")
 					.element("SpecificTendererRequirement") != null)
@@ -620,7 +637,8 @@ public class CodiceToPprocParser {
 						tenderersRequirementsResource.addProperty(PPROC.otherAbilityRequisites,
 								altElement.element("RequirementTypeCode").attributeValue("name"));
 					if ((altString = altElement.elementText("Description")) != null)
-						tenderersRequirementsResource.addProperty(PPROC.otherAbilityRequisites, altString);
+						tenderersRequirementsResource.addProperty(PPROC.otherAbilityRequisites, altString,
+								XSDDatatype.XSDstring);
 				}
 			contractResource.addProperty(PPROC.tenderersRequirements, tenderersRequirementsResource);
 		}
@@ -641,17 +659,19 @@ public class CodiceToPprocParser {
 				switch (altString) {
 				case "1":
 					criteriaCombinationResource.addProperty(DCTerms.description,
-							"Algoritmo de ponderación: Ponderación lineal");
+							"Algoritmo de ponderación: Ponderación lineal", XSDDatatype.XSDstring);
 					break;
 				case "2":
-					criteriaCombinationResource.addProperty(DCTerms.description, "Algoritmo de ponderación: Promedio");
+					criteriaCombinationResource.addProperty(DCTerms.description, "Algoritmo de ponderación: Promedio",
+							XSDDatatype.XSDstring);
 					break;
 				case "3":
-					criteriaCombinationResource.addProperty(DCTerms.description, "Algoritmo de ponderación: Topsis");
+					criteriaCombinationResource.addProperty(DCTerms.description, "Algoritmo de ponderación: Topsis",
+							XSDDatatype.XSDstring);
 					break;
 				case "4":
 					criteriaCombinationResource.addProperty(DCTerms.description,
-							"Algoritmo de ponderación: Lexicográfico");
+							"Algoritmo de ponderación: Lexicográfico", XSDDatatype.XSDstring);
 				}
 
 			// pc:AwardCriteriaCombination pc:awardCriterion
@@ -675,15 +695,15 @@ public class CodiceToPprocParser {
 
 				// pc:AwardCriterion pc:criterionName
 				if ((altString = altElement.elementText("Description")) != null)
-					criterionResource.addProperty(PC.criterionName, altString);
+					criterionResource.addProperty(PC.criterionName, altString, XSDDatatype.XSDstring);
 
 				// pc:AwardCriterion pc:criterionWeight
 				if ((altString = altElement.elementText("WeightNumeric")) != null)
-					criterionResource.addProperty(PC.criterionWeight, altString);
+					criterionResource.addProperty(PC.criterionWeight, altString, XSDDatatype.XSDfloat);
 
 				// pc:AwardCriterion pproc:criterionEvaluationMode
 				if ((altString = altElement.elementText("CalculationExpression")) != null)
-					criterionResource.addProperty(PPROC.criterionEvaluationMode, altString);
+					criterionResource.addProperty(PPROC.criterionEvaluationMode, altString, XSDDatatype.XSDstring);
 
 				// pc:AwardCriterion pproc:criterionMaxAndMinScores
 				altString2 = "";
@@ -696,7 +716,7 @@ public class CodiceToPprocParser {
 				if ((altString = altElement.elementText("MaximumAmount")) != null)
 					altString2 += "Importe máximo: " + altString + ". ";
 				if (altString2 != "")
-					criterionResource.addProperty(PPROC.criterionMaxAndMinScores, altString2);
+					criterionResource.addProperty(PPROC.criterionMaxAndMinScores, altString2, XSDDatatype.XSDstring);
 
 				criteriaCombinationResource.addProperty(PC.awardCriterion, criterionResource);
 			}
@@ -732,15 +752,15 @@ public class CodiceToPprocParser {
 							switch (altString2) {
 							case "DAY":
 								addionalObligationsResource.addProperty(PPROC.finalFinancialGuaranteeDuration, "P"
-										+ altString + "D");
+										+ altString + "D", XSDDatatype.XSDduration);
 								break;
 							case "MON":
 								addionalObligationsResource.addProperty(PPROC.finalFinancialGuaranteeDuration, "P"
-										+ altString + "M");
+										+ altString + "M", XSDDatatype.XSDduration);
 								break;
 							case "ANN":
 								addionalObligationsResource.addProperty(PPROC.finalFinancialGuaranteeDuration, "P"
-										+ altString + "Y");
+										+ altString + "Y", XSDDatatype.XSDduration);
 								break;
 							}
 						}
@@ -758,7 +778,7 @@ public class CodiceToPprocParser {
 							altString += " | Porcentaje: " + altElement.elementText("AmountRate");
 						if (altElement.element("LiabilityAmount") != null)
 							altString += " | Importe: " + altElement.elementText("LiabilityAmount");
-						addionalObligationsResource.addProperty(PPROC.otherGuarantee, altString);
+						addionalObligationsResource.addProperty(PPROC.otherGuarantee, altString, XSDDatatype.XSDstring);
 					}
 				}
 			}
@@ -779,7 +799,7 @@ public class CodiceToPprocParser {
 			altString2 += " "
 					+ document.getRootElement().element("TenderingTerms").element("MaximumAdvertisementAmount")
 							.attributeValue("currencyID");
-			addionalObligationsResource.addProperty(PPROC.advertisementAmount, altString2);
+			addionalObligationsResource.addProperty(PPROC.advertisementAmount, altString2, XSDDatatype.XSDstring);
 			cpeResource.addProperty(PPROC.contractAdditionalObligations, addionalObligationsResource);
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 		}
@@ -798,8 +818,10 @@ public class CodiceToPprocParser {
 			informationProviderResource.addProperty(S.location, placeResource);
 
 			// s:Place s:name
-			if ((altString = document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
-					.element("PartyName").elementText("Name")) != null)
+			if (document.getRootElement().element("TenderingTerms").element("AdditionalInformationParty")
+					.element("PartyName") != null
+					&& (altString = document.getRootElement().element("TenderingTerms")
+							.element("AdditionalInformationParty").element("PartyName").elementText("Name")) != null)
 				placeResource.addProperty(S.name, altString);
 
 			// s:Place s:address
@@ -810,18 +832,18 @@ public class CodiceToPprocParser {
 				placeResource.addProperty(S.address, postalAddressResource);
 				if ((altString = document.getRootElement().element("TenderingTerms")
 						.element("AdditionalInformationParty").element("PostalAddress").elementText("CityName")) != null)
-					postalAddressResource.addProperty(S.addressLocality, altString);
+					postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms")
 						.element("AdditionalInformationParty").element("PostalAddress").elementText("PostalZone")) != null)
-					postalAddressResource.addProperty(S.postalCode, altString);
+					postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms")
 						.element("AdditionalInformationParty").element("PostalAddress").element("AddressLine")
 						.elementText("Line")) != null)
-					postalAddressResource.addProperty(S.streetAddress, altString);
+					postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms")
 						.element("AdditionalInformationParty").element("PostalAddress").element("Country")
 						.elementText("IdentificationCode")) != null)
-					postalAddressResource.addProperty(S.addressCountry, altString);
+					postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 			}
 
 			// pproc:InformationProvider pproc:estimatedEndDate
@@ -829,7 +851,7 @@ public class CodiceToPprocParser {
 					&& document.getRootElement().element("TenderingProcess").element("DocumentAvailabilityPeriod") != null
 					&& (altString = document.getRootElement().element("TenderingProcess")
 							.element("DocumentAvailabilityPeriod").elementText("EndDate")) != null)
-				informationProviderResource.addProperty(PPROC.estimatedEndDate, altString);
+				informationProviderResource.addProperty(PPROC.estimatedEndDate, altString, XSDDatatype.XSDdate);
 
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			cpeResource.addProperty(PPROC.tenderInformationProvider, informationProviderResource);
@@ -853,7 +875,7 @@ public class CodiceToPprocParser {
 					.element("PartyName") != null
 					&& (altString = document.getRootElement().element("TenderingTerms")
 							.element("DocumentProviderParty").element("PartyName").elementText("Name")) != null)
-				placeResource.addProperty(S.name, altString);
+				placeResource.addProperty(S.name, altString, XSDDatatype.XSDstring);
 
 			// s:Place s:address
 			if (document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
@@ -863,16 +885,16 @@ public class CodiceToPprocParser {
 				placeResource.addProperty(S.address, postalAddressResource);
 				if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 						.element("PostalAddress").elementText("CityName")) != null)
-					postalAddressResource.addProperty(S.addressLocality, altString);
+					postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 						.element("PostalAddress").elementText("PostalZone")) != null)
-					postalAddressResource.addProperty(S.postalCode, altString);
+					postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 						.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
-					postalAddressResource.addProperty(S.streetAddress, altString);
+					postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 				if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 						.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
-					postalAddressResource.addProperty(S.addressCountry, altString);
+					postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 			}
 
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
@@ -897,13 +919,13 @@ public class CodiceToPprocParser {
 						.element("TenderSubmissionDeadlinePeriod").elementText("EndTime");
 				if (altString.indexOf("+") != -1)
 					altString = altString.substring(0, altString.indexOf("+"));
-				cpeResource.addProperty(PPROC.tenderDeadline, altString + "T" + altString2);
+				cpeResource.addProperty(PPROC.tenderDeadline, altString + "T" + altString2, XSDDatatype.XSDdateTime);
 			}
 
 			// pproc:ContractProcedureSpecifications dcterms:description
 			if ((altString = document.getRootElement().element("TenderingProcess")
 					.element("TenderSubmissionDeadlinePeriod").elementText("Description")) != null)
-				cpeResource.addProperty(DCTerms.description, altString);
+				cpeResource.addProperty(DCTerms.description, altString, XSDDatatype.XSDstring);
 
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 		}
@@ -931,7 +953,7 @@ public class CodiceToPprocParser {
 							altString2 += " | " + altString;
 					}
 				}
-				tenderRequirementsResource.addProperty(PPROC.tenderDocumentNeeds, altString2);
+				tenderRequirementsResource.addProperty(PPROC.tenderDocumentNeeds, altString2, XSDDatatype.XSDstring);
 			}
 
 			// pproc:TenderRequirements pproc:tenderManteinanceDuration
@@ -942,13 +964,16 @@ public class CodiceToPprocParser {
 							.element("TenderValidityPeriod").element("DurationMeasure").attributeValue("unitCode")) != null)
 				switch (altString2) {
 				case "DAY":
-					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "D");
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "D",
+							XSDDatatype.XSDduration);
 					break;
 				case "MON":
-					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "M");
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "M",
+							XSDDatatype.XSDduration);
 					break;
 				case "ANN":
-					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "Y");
+					tenderRequirementsResource.addProperty(PPROC.tenderManteinanceDuration, "P" + altString + "Y",
+							XSDDatatype.XSDduration);
 					break;
 				}
 
@@ -966,7 +991,7 @@ public class CodiceToPprocParser {
 			// s:Place s:name
 			if ((altString = document.getRootElement().element("TenderingTerms").element("TenderRecipentParty")
 					.element("PartyName").elementText("Name")) != null)
-				placeResource.addProperty(S.name, altString);
+				placeResource.addProperty(S.name, altString, XSDDatatype.XSDstring);
 
 			// s:Place s:address
 			Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
@@ -974,16 +999,16 @@ public class CodiceToPprocParser {
 			placeResource.addProperty(S.address, postalAddressResource);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 					.element("PostalAddress").elementText("CityName")) != null)
-				postalAddressResource.addProperty(S.addressLocality, altString);
+				postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 					.element("PostalAddress").elementText("PostalZone")) != null)
-				postalAddressResource.addProperty(S.postalCode, altString);
+				postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 					.element("PostalAddress").element("AddressLine").elementText("Line")) != null)
-				postalAddressResource.addProperty(S.streetAddress, altString);
+				postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 			if ((altString = document.getRootElement().element("TenderingTerms").element("DocumentProviderParty")
 					.element("PostalAddress").element("Country").elementText("IdentificationCode")) != null)
-				postalAddressResource.addProperty(S.addressCountry, altString);
+				postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 
 			contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 			cpeResource.addProperty(PPROC.tenderSubmissionLocation, placeResource);
@@ -1008,23 +1033,26 @@ public class CodiceToPprocParser {
 
 				// pproc:TenderMeeting pproc:tenderPurpose
 				if ((altString = altElement.elementText("Description")) != null)
-					tenderMeetingResource.addProperty(PPROC.tenderPurpose, altString);
+					tenderMeetingResource.addProperty(PPROC.tenderPurpose, altString, XSDDatatype.XSDstring);
 				else if ((altString = altElement.elementText("TypeCode")) != null)
 					// Si no hay descripción textual, usaremos la del código
 					// TODO parseo independiente de versión (parseo del .gc)
 					switch (altString) {
 					case "1":
-						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre administrativa");
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre administrativa",
+								XSDDatatype.XSDstring);
 						break;
 					case "2":
-						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta técnica");
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta técnica",
+								XSDDatatype.XSDstring);
 						break;
 					case "3":
 						tenderMeetingResource.addProperty(PPROC.tenderPurpose,
-								"Apertura sobre oferta técnica y económica");
+								"Apertura sobre oferta técnica y económica", XSDDatatype.XSDstring);
 						break;
 					case "4":
-						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta económica");
+						tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre oferta económica",
+								XSDDatatype.XSDstring);
 						break;
 					}
 
@@ -1035,20 +1063,20 @@ public class CodiceToPprocParser {
 
 					// s:Place s:name
 					if ((altString = altElement.elementText("Description")) != null)
-						placeResource.addProperty(S.name, altString);
+						placeResource.addProperty(S.name, altString, XSDDatatype.XSDstring);
 
 					// s:Place s:address
 					Resource postalAddressResource = model.createResource(placeResource + "/PostalAddress");
 					postalAddressResource.addProperty(RDF.type, S.PostalAddress);
 					placeResource.addProperty(S.address, postalAddressResource);
 					if ((altString = altElement.element("Address").elementText("CityName")) != null)
-						postalAddressResource.addProperty(S.addressLocality, altString);
+						postalAddressResource.addProperty(S.addressLocality, altString, XSDDatatype.XSDstring);
 					if ((altString = altElement.element("Address").elementText("PostalZone")) != null)
-						postalAddressResource.addProperty(S.postalCode, altString);
+						postalAddressResource.addProperty(S.postalCode, altString, XSDDatatype.XSDstring);
 					if ((altString = altElement.element("Address").element("AddressLine").elementText("Line")) != null)
-						postalAddressResource.addProperty(S.streetAddress, altString);
+						postalAddressResource.addProperty(S.streetAddress, altString, XSDDatatype.XSDstring);
 					if ((altString = altElement.element("Address").element("Country").elementText("IdentificationCode")) != null)
-						postalAddressResource.addProperty(S.addressCountry, altString);
+						postalAddressResource.addProperty(S.addressCountry, altString, XSDDatatype.XSDstring);
 
 					tenderMeetingResource.addProperty(S.location, placeResource);
 				}
@@ -1058,7 +1086,8 @@ public class CodiceToPprocParser {
 						&& (altString2 = altElement.elementText("OcurrenceTime")) != null) {
 					if (altString.indexOf("+") != -1)
 						altString = altString.substring(0, altString.indexOf("+"));
-					tenderMeetingResource.addProperty(S.startDate, altString + "T" + altString2);
+					tenderMeetingResource.addProperty(S.startDate, altString + "T" + altString2,
+							XSDDatatype.XSDdateTime);
 				}
 
 				contractActivitiesResource.addProperty(PPROC.tenderMeeting, tenderMeetingResource);
@@ -1096,7 +1125,8 @@ public class CodiceToPprocParser {
 							procedureVoidResource.addProperty(RDF.type, PPROC.ContractOrProcedureExtinction);
 							procedureVoidResource.addProperty(RDF.type, PPROC.ProcedureVoid);
 							if ((altString = altElement.elementText("Description")) != null)
-								procedureVoidResource.addProperty(PPROC.extinctionCause, altString);
+								procedureVoidResource.addProperty(PPROC.extinctionCause, altString,
+										XSDDatatype.XSDstring);
 							contractResource.addProperty(PPROC.contractOrProcedureExtinction, procedureVoidResource);
 							contractResource.addProperty(PPROC.procedureVoid, procedureVoidResource);
 							break;
@@ -1106,7 +1136,8 @@ public class CodiceToPprocParser {
 							procedureResignation.addProperty(RDF.type, PPROC.ContractOrProcedureExtinction);
 							procedureResignation.addProperty(RDF.type, PPROC.ProcedureResignation);
 							if ((altString = altElement.elementText("Description")) != null)
-								procedureResignation.addProperty(PPROC.extinctionCause, altString);
+								procedureResignation.addProperty(PPROC.extinctionCause, altString,
+										XSDDatatype.XSDstring);
 							contractResource.addProperty(PPROC.contractOrProcedureExtinction, procedureResignation);
 							contractResource.addProperty(PPROC.procedureResignation, procedureResignation);
 							break;
@@ -1115,7 +1146,7 @@ public class CodiceToPprocParser {
 							procedureWaive.addProperty(RDF.type, PPROC.ContractOrProcedureExtinction);
 							procedureWaive.addProperty(RDF.type, PPROC.ProcedureWaive);
 							if ((altString = altElement.elementText("Description")) != null)
-								procedureWaive.addProperty(PPROC.extinctionCause, altString);
+								procedureWaive.addProperty(PPROC.extinctionCause, altString, XSDDatatype.XSDstring);
 							contractResource.addProperty(PPROC.contractOrProcedureExtinction, procedureWaive);
 							contractResource.addProperty(PPROC.procedureWaive, procedureWaive);
 							break;
@@ -1158,16 +1189,18 @@ public class CodiceToPprocParser {
 								// org:Organization dcterms:title
 								if ((altString = altElement.element("WinningParty").element("PartyName")
 										.elementText("Name")) != null)
-									supplierResource.addProperty(DCTerms.title, altString);
+									supplierResource.addProperty(DCTerms.title, altString, XSDDatatype.XSDstring);
 
 								// org:Organization dcterms:identifier
 								if ((altString = altElement.element("WinningParty").elementText("PartyIdentification")) != null) {
-									supplierResource.addProperty(DCTerms.identifier, altString);
+									supplierResource.addProperty(DCTerms.identifier, altString, XSDDatatype.XSDstring);
 								}
 
 								// org:Organization org:hasSite
 								// TODO con esta y otras PartyType, coger PostalAddress y PhysicalLocation
-								if (altElement.element("WinningParty").element("PhysicalLocation") != null) {
+								if (altElement.element("WinningParty").element("PhysicalLocation") != null
+										&& altElement.element("WinningParty").element("PhysicalLocation")
+												.element("Address") != null) {
 									Resource placeResource = model.createResource(supplierResource + "/Place");
 									placeResource.addProperty(RDF.type, S.Place);
 									supplierResource.addProperty(ORG.hasSite, placeResource);
@@ -1179,36 +1212,40 @@ public class CodiceToPprocParser {
 									placeResource.addProperty(S.address, postalAddressResource);
 									if ((altString = altElement.element("WinningParty").element("PhysicalLocation")
 											.element("Address").elementText("CityName")) != null)
-										postalAddressResource.addProperty(S.addressLocality, altString);
+										postalAddressResource.addProperty(S.addressLocality, altString,
+												XSDDatatype.XSDstring);
 									if ((altString = altElement.element("WinningParty").element("PhysicalLocation")
 											.element("Address").elementText("PostalZone")) != null)
-										postalAddressResource.addProperty(S.postalCode, altString);
+										postalAddressResource.addProperty(S.postalCode, altString,
+												XSDDatatype.XSDstring);
 									if (altElement.element("WinningParty").element("PhysicalLocation")
 											.element("Address").element("AddressLine") != null
 											&& (altString = altElement.element("WinningParty")
 													.element("PhysicalLocation").element("Address")
 													.element("AddressLine").elementText("Line")) != null)
-										postalAddressResource.addProperty(S.streetAddress, altString);
+										postalAddressResource.addProperty(S.streetAddress, altString,
+												XSDDatatype.XSDstring);
 									if ((altString = altElement.element("WinningParty").element("PhysicalLocation")
 											.element("Address").element("Country").elementText("IdentificationCode")) != null)
-										postalAddressResource.addProperty(S.addressCountry, altString);
+										postalAddressResource.addProperty(S.addressCountry, altString,
+												XSDDatatype.XSDstring);
 								}
 
 								if (altElement.element("WinningParty").element("Contact") != null) {
 									// org:Organization s:telephone
 									if ((altString = altElement.element("WinningParty").element("Contact")
 											.elementText("Telephone")) != null)
-										supplierResource.addProperty(S.telephone, altString);
+										supplierResource.addProperty(S.telephone, altString, XSDDatatype.XSDstring);
 
 									// org:Organization s:faxNumber
 									if ((altString = altElement.element("WinningParty").element("Contact")
 											.elementText("Telefax")) != null)
-										supplierResource.addProperty(S.faxNumber, altString);
+										supplierResource.addProperty(S.faxNumber, altString, XSDDatatype.XSDstring);
 
 									// org:Organization s:email
 									if ((altString = altElement.element("WinningParty").element("Contact")
 											.elementText("ElectronicMail")) != null)
-										supplierResource.addProperty(PPROC.delegatingAuthority, altString);
+										supplierResource.addProperty(S.email, altString, XSDDatatype.XSDstring);
 								}
 							}
 
@@ -1222,11 +1259,12 @@ public class CodiceToPprocParser {
 									.elementText("PayableAmount")) != null) {
 								Resource priceResource = model.createResource(tenderResource + "/OfferedPrice");
 								priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-								priceResource.addProperty(GR.hasCurrencyValue, altString);
+								priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
 								priceResource.addProperty(GR.hasCurrency,
 										altElement.element("AwardedTenderedProject").element("LegalMonetaryTotal")
-												.element("PayableAmount").attributeValue("currencyID"));
-								priceResource.addProperty(GR.valueAddedTaxIncluded, "true");
+												.element("PayableAmount").attributeValue("currencyID"),
+										XSDDatatype.XSDstring);
+								priceResource.addProperty(GR.valueAddedTaxIncluded, "true", XSDDatatype.XSDboolean);
 								tenderResource.addProperty(PC.offeredPrice, priceResource);
 							}
 
@@ -1236,11 +1274,12 @@ public class CodiceToPprocParser {
 								Resource priceResource = model.createResource(tenderResource
 										+ "/OfferedPriceWithoutTaxes");
 								priceResource.addProperty(RDF.type, PPROC.BundlePriceSpecification);
-								priceResource.addProperty(GR.hasCurrencyValue, altString);
+								priceResource.addProperty(GR.hasCurrencyValue, altString, XSDDatatype.XSDfloat);
 								priceResource.addProperty(GR.hasCurrency,
 										altElement.element("AwardedTenderedProject").element("LegalMonetaryTotal")
-												.element("TaxExclusiveAmount").attributeValue("currencyID"));
-								priceResource.addProperty(GR.valueAddedTaxIncluded, "false");
+												.element("TaxExclusiveAmount").attributeValue("currencyID"),
+										XSDDatatype.XSDstring);
+								priceResource.addProperty(GR.valueAddedTaxIncluded, "false", XSDDatatype.XSDboolean);
 								tenderResource.addProperty(PC.offeredPrice, priceResource);
 							}
 						}
