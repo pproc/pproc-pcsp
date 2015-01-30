@@ -2,6 +2,7 @@ package es.danielrusa.crawler;
 
 public class Row {
 
+	public Integer id = null;
 	public String link;
 	public String expediente;
 	public String xml;
@@ -10,6 +11,16 @@ public class Row {
 
 	public Row(String link, String expediente, String xml, String post, String idplataforma) {
 		super();
+		this.link = link;
+		this.expediente = expediente;
+		this.xml = xml;
+		this.post = post;
+		this.idplataforma = idplataforma;
+	}
+	
+	public Row(Integer id, String link, String expediente, String xml, String post, String idplataforma) {
+		super();
+		this.id = id;
 		this.link = link;
 		this.expediente = expediente;
 		this.xml = xml;
