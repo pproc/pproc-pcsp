@@ -1,4 +1,4 @@
-package es.danielrusa.crawler;
+package es.unizar.contsem;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -10,8 +10,6 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-
-import es.unizar.contsem.Log;
 
 public class DefaultTrustManager implements X509TrustManager {
 

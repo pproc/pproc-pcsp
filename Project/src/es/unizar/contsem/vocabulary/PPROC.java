@@ -121,5 +121,6 @@ public class PPROC {
 	public static final Property legalDocumentReference = property("legalDocumentReference");
 	public static final Property technicalDocumentReference = property("technicalDocumentReference");
 	public static final Property additionalDocumentReference = property("additionalDocumentReference");
+	public static final Property location = property("location");
 
 }
