@@ -14,8 +14,7 @@ import java.util.regex.Pattern;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
-import es.unizar.contsem.crawler.Main_LinkCrawler;
-import es.unizar.contsem.parser.Main_CodiceParser;
+import es.unizar.contsem.crawler.DefaultTrustManager;
 
 public class Utils {
 
@@ -69,11 +68,11 @@ public class Utils {
                 success = true;
                 conn.disconnect();
             } catch (Exception e) {
-                Log.warning(Main_LinkCrawler.class, "try number %d at getXML failed", tryCount);
+                Log.warning(Utils.class, "try number %d at getXML failed", tryCount);
             }
         }
         if (!success) {
-            Log.error(Main_LinkCrawler.class, "getXML could not retrieve the XML");
+            Log.error(Utils.class, "getXML could not retrieve the XML");
             return "<error/>";
         }
         return result2;
@@ -89,7 +88,7 @@ public class Utils {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        Log.info(Main_CodiceParser.class, "escritura finalizada");
+        Log.info(Utils.class, "escritura finalizada");
     }
 
     public static void writeInfile(String fileName, String writeThis) {

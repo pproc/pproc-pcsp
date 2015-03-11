@@ -36,5 +36,6 @@ public class PC {
 	public static final Property criterionWeight = property("criterionWeight");
 	public static final Property tender = property("tender");
 	public static final Property offeredPrice = property("offeredPrice");
+	public static final Property supplier = property("supplier");
 
 }

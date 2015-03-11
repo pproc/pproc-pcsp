@@ -18,9 +18,9 @@ import org.dom4j.io.SAXReader;
 import es.unizar.contsem.Database;
 import es.unizar.contsem.Log;
 import es.unizar.contsem.Utils;
-import es.unizar.contsem.XmlLink;
+import es.unizar.contsem.crawler.XmlLink;
 
-public class Test {
+public class PropertyCount {
 
     public static String printThis = "";
     public static Map<String, Integer> propertyCount = new HashMap<String, Integer>();
@@ -38,7 +38,7 @@ public class Test {
                             .getBytes(StandardCharsets.UTF_8)));
                     countProperties("", document.getRootElement());
                 } catch (DocumentException e) {
-                    Log.error(Test.class, "error parsing codice doc");
+                    Log.error(PropertyCount.class, "error parsing codice doc");
                 }
         }
 
@@ -55,7 +55,7 @@ public class Test {
     public static void countProperties(String parentPath, Element rootElement) {
         if (rootElement == null)
             return;
-        for (Iterator iter = rootElement.elementIterator(); iter.hasNext();) {
+        for (Iterator<?> iter = rootElement.elementIterator(); iter.hasNext();) {
             Element element = (Element) iter.next();
             Integer previousCount = propertyCount.get(parentPath + "/" + element.getName());
             propertyCount.put(parentPath + "/" + element.getName(), previousCount == null ? 1 : previousCount + 1);
@@ -81,7 +81,7 @@ public class Test {
     public static void main(String[] args) {
 
         if (args.length != 3) {
-            Log.error(Test.class, "usage: Test database/table_URL username password");
+            Log.error(PropertyCount.class, "usage: Test database/table_URL username password");
             return;
         }
 
@@ -89,7 +89,7 @@ public class Test {
         database.connect();
         Log.setLevel(Log.DEBUG);
         try {
-            Test.start(database);
+            PropertyCount.start(database);
         } catch (Exception e) {
             e.printStackTrace();
         }

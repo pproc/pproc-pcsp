@@ -17,7 +17,7 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import es.unizar.contsem.Database;
 import es.unizar.contsem.Log;
 import es.unizar.contsem.Utils;
-import es.unizar.contsem.XmlLink;
+import es.unizar.contsem.crawler.XmlLink;
 
 /**
  * Transforms the XML/CODICE documents stored in a database into RDF following PPROC ontology.
@@ -69,7 +69,7 @@ public class Main_CodiceParser {
                     String.format("pcsp-output/pcsp-output-%d-%d.ttl", totalCount - tempCount + 1, totalCount));
             model.removeAll();
             model.close();
-            database.updateFlags(tempXmlLinks, 2);
+            database.updateFlags(tempXmlLinks, 3);
             model = ModelFactory.createDefaultModel();
             tempCount = 0;
             tempXmlLinks.clear();

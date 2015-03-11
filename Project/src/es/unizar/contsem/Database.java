@@ -8,6 +8,8 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
+import es.unizar.contsem.crawler.XmlLink;
+
 /**
  * Simple database class. This class assume the existence of a table named {@value #TABLE_NAME} with two columns:
  * <ul>
@@ -71,6 +73,30 @@ public class Database {
                 return false;
             }
         return true;
+    }
+
+    public Set<XmlLink> getLinksById(int flag, int minId, int maxId) {
+        if (myConnection == null) {
+            Log.error(this.getClass(), "[getLinksByFlag] database connection not established");
+            return null;
+        }
+        long startTime = System.currentTimeMillis();
+        Statement stmt = null;
+        Set<XmlLink> xmlLinks = new HashSet<XmlLink>();
+        try {
+            stmt = myConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT id, link, flag, xml FROM " + TABLE_NAME + " WHERE flag = " + flag
+                    + " and id>=" + minId + " and id<" + maxId);
+            while (rs.next())
+                xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs.getString("xml")));
+            rs.close();
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        Log.info(this.getClass(), "[getLinksByFlag] takes %f seconds",
+                (double) (System.currentTimeMillis() - startTime) / 1000);
+        return xmlLinks;
     }
 
     public Set<XmlLink> getLinksByFlag(int flag, int limit) {

@@ -1,4 +1,4 @@
-package es.unizar.contsem;
+package es.unizar.contsem.crawler;
 
 public class XmlLink {
 

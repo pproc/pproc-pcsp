@@ -55,6 +55,8 @@ public class PPROC {
 	public static final Resource DynamicPurchasingSystemConclusionContract = resource("DynamicPurchasingSystemConclusionContract");
 	public static final Resource FrameworkDerivativeContract = resource("FrameworkDerivativeContract");
 	public static final Resource DynamicPurchasingSystemDerivativeContract = resource("DynamicPurchasingSystemDerivativeContract");
+	public static final Resource ConclusionContract = resource("ConclusionContract");
+	public static final Resource DerivativeContract = resource("DerivativeContract");
 	public static final Resource FrameworkAgreement = resource("FrameworkAgreement");
 	public static final Resource ContractObject = resource("ContractObject");
 	public static final Resource TenderersRequirements = resource("TenderersRequirements");

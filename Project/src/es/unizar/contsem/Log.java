@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,22 +22,22 @@ public class Log {
         message_priority = priority;
     }
 
-    public static void error(Class aClass, String message, Object... args) {
+    public static void error(Class<?> aClass, String message, Object... args) {
         if (message_priority <= ERROR)
             System.err.printf(getNow() + " [ERROR] " + aClass.getSimpleName() + " : " + message + "\n", args);
     }
 
-    public static void warning(Class aClass, String message, Object... args) {
+    public static void warning(Class<?> aClass, String message, Object... args) {
         if (message_priority <= WARNING)
             System.out.printf(getNow() + " [WARNING] " + aClass.getSimpleName() + " : " + message + "\n", args);
     }
 
-    public static void info(Class aClass, String message, Object... args) {
+    public static void info(Class<?> aClass, String message, Object... args) {
         if (message_priority <= INFO)
             System.out.printf(getNow() + " [INFO] " + aClass.getSimpleName() + " : " + message + "\n", args);
     }
 
-    public static void debug(Class aClass, String message, Object... args) {
+    public static void debug(Class<?> aClass, String message, Object... args) {
         if (message_priority <= DEBUG)
             System.out.printf(getNow() + " [DEBUG] " + aClass.getSimpleName() + " : " + message + "\n", args);
     }
