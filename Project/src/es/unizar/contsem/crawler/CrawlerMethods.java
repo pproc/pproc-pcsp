@@ -183,6 +183,10 @@ public class CrawlerMethods {
         return document;
     }
 
+    private static String getUUID(org.dom4j.Document doc) {
+        return doc.getRootElement().elementText("UUID").replace("-", "").trim();
+    }
+
     /**
      * Gets XML/CODICE links from http://contrataciondelestado.es/ and store them in a database.
      * 
@@ -258,7 +262,7 @@ public class CrawlerMethods {
      */
     public static void downloadXmls(Database database) throws FileNotFoundException, UnsupportedEncodingException,
             InterruptedException {
-        Set<XmlLink> xmlLinks = database.getLinksByFlag(0, 0);
+        Set<XmlLink> xmlLinks = database.selectByLimit(false, 0, Database.FLAG_ONLY_LINK);
         Set<XmlLink> tempXmlLinks = new HashSet<XmlLink>();
         int tempCount = 0;
         String xml;
@@ -273,7 +277,7 @@ public class CrawlerMethods {
                 Log.info(CrawlerMethods.class, "[downloadXmls] takes %f seconds to download %d xmls",
                         (double) (System.currentTimeMillis() - startTime) / 1000, tempXmlLinks.size());
                 database.updateXmls(tempXmlLinks);
-                database.updateFlags(tempXmlLinks, 1);
+                database.updateFlags(tempXmlLinks, Database.FLAG_XML_UNCHECKED);
                 tempCount = 0;
                 tempXmlLinks.clear();
                 startTime = System.currentTimeMillis();
@@ -287,28 +291,50 @@ public class CrawlerMethods {
      * Check the XML/CODICE files stored in a database to assure they are correct, if some XML/CODICE is not correct,
      * it's retrieved again using the link stored in the database.
      * 
-     * Is assumed that a CODICE XML of 4724 bytes of length is incorrect (otherwise the SaxReader throws an Exception).
+     * Is assumed that a CODICE XML is incorrect when SaxReader throws an Exception.
      * 
      * @author gesteban
      * @see es.unizar.contsem.Database
      */
-    public static void updateCorruptedXmls(Database database) throws InterruptedException {
+    public static void updateCorruptedXmls(Database database) throws InterruptedException, DocumentException {
         int errorCount = 0;
-        for (int i = 1; i < 300000; i = i + MAX_BUFFER_UPDATE) {
-            Set<XmlLink> xmlLinks = database.getLinksById(1, i, i + MAX_BUFFER_UPDATE);
+        SAXReader reader = new SAXReader();
+        org.dom4j.Document document;
+        Set<XmlLink> xmlLinks = database.selectByLimit(true, MAX_BUFFER_UPDATE, Database.FLAG_XML_UNCHECKED);
+        while (xmlLinks.size() > 0) {
+            Set<XmlLink> xmlLinksToUpdate = new HashSet<XmlLink>();
             for (XmlLink xmlLink : xmlLinks)
-                if (xmlLink.xml.getBytes(StandardCharsets.UTF_8).length == 4724) {
+                try {
+                    document = reader.read(new ByteArrayInputStream(xmlLink.xml.getBytes(StandardCharsets.UTF_8)));
+                    xmlLinksToUpdate.add(xmlLink);
+                } catch (org.dom4j.DocumentException ex) {
                     errorCount++;
                     String xml = Utils.getXML(xmlLink.link);
                     Thread.sleep(1000);
-                    if (xml.getBytes(StandardCharsets.UTF_8).length != 4724) {
+                    try {
+                        document = reader.read(new ByteArrayInputStream(xmlLink.xml.getBytes(StandardCharsets.UTF_8)));
                         xmlLink.xml = xml;
+                        xmlLinksToUpdate.add(xmlLink);
                         database.updateXml(xmlLink);
-                    } else
-                        Log.error(CrawlerMethods.class, "[updateCorruptedXmls] de nuevo 4724 en %d" + xmlLink.id);
+                    } catch (org.dom4j.DocumentException ex2) {
+                        Log.error(CrawlerMethods.class, "[updateCorruptedXmls] %d still corrupted", xmlLink.id);
+                        database.updateFlag(xmlLink, Database.FLAG_XML_INCORRECT);
+                    }
                 }
-            if (xmlLinks.isEmpty())
-                break;
+            for (XmlLink xmlLink : xmlLinksToUpdate) {
+                document = reader.read(new ByteArrayInputStream(xmlLink.xml.getBytes(StandardCharsets.UTF_8)));
+                try {
+                    xmlLink.uuid = getUUID(document);
+                } catch (Exception ex) {
+                    Utils.writeInfile("debug/codice.xml", xmlLink.xml);
+                    Log.error(CrawlerMethods.class, "[updateCorruptedXmls] error, exiting", xmlLink.id);
+                    System.exit(-1);
+                }
+                database.updateUUID(xmlLink);
+            }
+            database.updateFlags(xmlLinksToUpdate, Database.FLAG_UUID_UNCHECKED);
+            xmlLinksToUpdate.clear();
+            xmlLinks = database.selectByLimit(true, MAX_BUFFER_UPDATE, Database.FLAG_XML_UNCHECKED);
         }
         Log.info(CrawlerMethods.class, "[updateCorruptedXmls] errorCount = " + errorCount);
     }
@@ -321,43 +347,80 @@ public class CrawlerMethods {
      * @see es.unizar.contsem.Database
      */
     public static void checkDeprecatedXmls(Database database) throws InterruptedException, DocumentException {
-        int errorCount = 0;
-        for (int i = 1; i < 3000; i = i + MAX_BUFFER_CHECK) {
-            Set<XmlLink> xmlLinks = database.getLinksById(1, i, i + MAX_BUFFER_CHECK);
-            Set<XmlLink> xmlLinksToUpdate = new HashSet<XmlLink>();
-            for (XmlLink xmlLink : xmlLinks) {
-                SAXReader reader = new SAXReader();
-                org.dom4j.Document document = reader.read(new ByteArrayInputStream(xmlLink.xml
-                        .getBytes(StandardCharsets.UTF_8)));
-                if (document.getRootElement().element("UBLExtensions") != null) {
-                    String altString = document.getRootElement().getName();
-                    String superDocumentUUID = null;
-                    org.dom4j.Element altElement = document.getRootElement().element("UBLExtensions")
-                            .element("UBLExtension").element("ExtensionContent").element("difference")
-                            .element("corrections");
-                    for (Iterator<?> iter = altElement.elementIterator("correction"); iter.hasNext();) {
-                        org.dom4j.Element altElement2 = (org.dom4j.Element) iter.next();
-                        if (altElement2.attributeValue("").contains(altString + "[1]/UUID[1]/text()[1]")) {
-                            superDocumentUUID = altElement2.element("new").elementText("UUID");
+        Set<XmlLink> xmlLinks = database.selectByLimit(true, MAX_BUFFER_CHECK, Database.FLAG_UUID_UNCHECKED,
+                Database.FLAG_UUID_UNCHECKED_DEPRECATED);
+        org.dom4j.Document document = null;
+        SAXReader reader = new SAXReader();
+        try {
+            while (xmlLinks.size() > 0) {
+                Set<String> uuidsDeprecated = new HashSet<String>();
+                Set<XmlLink> altSetWithDeprecatedChecked = new HashSet<XmlLink>();
+                for (Iterator<XmlLink> iter = xmlLinks.iterator(); iter.hasNext();) {
+                    XmlLink xmlLink = iter.next();
+                    document = reader.read(new ByteArrayInputStream(xmlLink.xml.getBytes(StandardCharsets.UTF_8)));
+                    if (document.getRootElement().element("UBLExtensions") != null) {
+                        org.dom4j.Element altElement = (org.dom4j.Element) document.getRootElement()
+                                .element("UBLExtensions").element("UBLExtension").element("ExtensionContent")
+                                .elements().get(0);
+                        switch (altElement.getName()) {
+                        case "difference":
+                            altElement = altElement.element("corrections");
+                            boolean success = false;
+                            for (Iterator<?> iter2 = altElement.elementIterator("correction"); iter2.hasNext();) {
+                                org.dom4j.Element altElement2 = (org.dom4j.Element) iter2.next();
+                                if (altElement2.attributeValue("location").contains(
+                                        document.getRootElement().getName() + "[1]/UUID[1]/text()[1]")) {
+                                    uuidsDeprecated.add(altElement2.element("old").elementText("UUID"));
+                                    if (xmlLink.flag == Database.FLAG_UUID_UNCHECKED_DEPRECATED) {
+                                        altSetWithDeprecatedChecked.add(xmlLink);
+                                        iter.remove();
+                                    }
+                                    success = true;
+                                }
+                            }
+                            if (!success) {
+                                Log.error(CrawlerMethods.class, "[checkDeprecatedXmls] unexpected miss element");
+                                Utils.writeInfile("debug/codice.xml", document.asXML());
+                                System.exit(-1);
+                            }
+                            break;
+                        case "NoticeCancellation":
+                            uuidsDeprecated.add(altElement.elementText("ReferencedUUID"));
+                            if (xmlLink.flag == Database.FLAG_UUID_UNCHECKED_DEPRECATED) {
+                                altSetWithDeprecatedChecked.add(xmlLink);
+                                iter.remove();
+                            }
+                            break;
+                        default:
+                            Log.warning(CrawlerMethods.class,
+                                    "[checkDeprecatedXmls] UBLExtension child %s not supported", altElement.getName());
                         }
                     }
-                    if (superDocumentUUID != null) {
-                        xmlLinksToUpdate.add(xmlLink);
-                    } else {
-                        Log.error(CrawlerMethods.class, "[checkDeprecatedXmls] Error inesperado");
-                        System.exit(-1);
-                    }
                 }
+                database.updateFlags(xmlLinks, Database.FLAG_CHECKED_VALID);
+                database.updateFlags(altSetWithDeprecatedChecked, Database.FLAG_CHECKED_DEPRECATED);
+                Set<XmlLink> newlyDeprecated = database.selectByUuids(false, uuidsDeprecated);
+                for (XmlLink xmlLink : newlyDeprecated)
+                    database.updateFlag(xmlLink, -xmlLink.flag);
+                Log.info(
+                        CrawlerMethods.class,
+                        "[checkDeprecatedXmls] checked %d xmls: %d checked/valid, %d checked/deprecated, %d new deprecated",
+                        xmlLinks.size() + altSetWithDeprecatedChecked.size(), xmlLinks.size(),
+                        altSetWithDeprecatedChecked.size(), newlyDeprecated.size());
+                altSetWithDeprecatedChecked.clear();
+                uuidsDeprecated.clear();
+                xmlLinks = database.selectByLimit(true, MAX_BUFFER_CHECK, Database.FLAG_UUID_UNCHECKED,
+                        Database.FLAG_UUID_UNCHECKED_DEPRECATED);
             }
-            database.updateFlags(xmlLinksToUpdate, 3);
-            if (xmlLinks.isEmpty())
-                break;
+        } catch (Exception ex) {
+            Log.error(CrawlerMethods.class, "[checkDeprecatedXmls] error");
+            ex.printStackTrace();
+            Utils.writeInfile("debug/codice.xml", document.asXML());
         }
-        Log.info(CrawlerMethods.class, "[checkDeprecatedXmls] errorCount = " + errorCount);
     }
 
     public static void main(String[] args) {
-        Log.setLevel(Log.DEBUG);
+        Log.setLevel(Log.INFO);
         if (args.length != 3) {
             Log.error(CrawlerMethods.class, "need database parameters: database/table_URL username password");
             return;
@@ -368,7 +431,9 @@ public class CrawlerMethods {
         try {
             // CrawlerMethods.getXmlLinks(database);
             // CrawlerMethods.downloadXmls(database);
-            CrawlerMethods.updateCorruptedXmls(database);
+            // CrawlerMethods.updateCorruptedXmls(database);
+            // CrawlerMethods.fillUuids(database);
+            CrawlerMethods.checkDeprecatedXmls(database);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

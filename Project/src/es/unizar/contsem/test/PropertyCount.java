@@ -31,7 +31,7 @@ public class PropertyCount {
         // Parse
         SAXReader reader = new SAXReader();
         for (int i = 1000; i < 10000; i = i + 1000) {
-            Set<XmlLink> xmlLinks = database.getLinksByFlag(1, i);
+            Set<XmlLink> xmlLinks = database.selectByLimit(true, i, Database.FLAG_XML_UNCHECKED);
             for (XmlLink xmlLink : xmlLinks)
                 try {
                     Document document = reader.read(new ByteArrayInputStream(xmlLink.xml

@@ -13,10 +13,11 @@ import es.unizar.contsem.crawler.XmlLink;
 /**
  * Simple database class. This class assume the existence of a table named {@value #TABLE_NAME} with two columns:
  * <ul>
- * <li><b>id</b>: <i>auto-increment primary_key</i> integer</li>
- * <li><b>link</b>: medium_text</li>
- * <li><b>flag</b>: integer</li>
- * <li><b>xml</b>: longtext</li>
+ * <li><b>id</b>: <i>auto-increment primary_key integer</i>. Database identifier.</li>
+ * <li><b>link</b>: <i>medium_text</i>. URL with the xml content.</li>
+ * <li><b>flag</b>: <i>integer</i>. Row entry status.</li>
+ * <li><b>xml</b>: <i>longtext</i>. XML/CODICE content.</li>
+ * <li><b>uuid</b>: <i>varchar(129)</i>. UUID of the XML/CODICE document.</li>
  * </ul>
  * 
  * @author gesteban
@@ -24,7 +25,36 @@ import es.unizar.contsem.crawler.XmlLink;
  */
 public class Database {
 
-    private String TABLE_NAME = "XmlLinks";
+    /**
+     * Entry without any content at 'xml' column
+     */
+    public static final int FLAG_ONLY_LINK = 0;
+    /**
+     * Entry with 'xml' content, not yet checked
+     */
+    public static final int FLAG_XML_UNCHECKED = 1;
+    /**
+     * Entry with invalid 'xml' content
+     */
+    public static final int FLAG_XML_INCORRECT = -1;
+    /**
+     * Valid entry, not yet endorsement check
+     */
+    public static final int FLAG_UUID_UNCHECKED = 2;
+    /**
+     * Valid entry, not yet endorsement check, deprecated
+     */
+    public static final int FLAG_UUID_UNCHECKED_DEPRECATED = -2;
+    /**
+     * Valid entry, endorsement checked
+     */
+    public static final int FLAG_CHECKED_VALID = 3;
+    /**
+     * Valid entry, endorsement checked, deprecated
+     */
+    public static final int FLAG_CHECKED_DEPRECATED = -3;
+
+    private String TABLE_NAME = "XmlLinks2";
     private String server, user, pass;
     private Connection myConnection;
     private int MAX_TRIES = 2;
@@ -57,7 +87,7 @@ public class Database {
         }
         myConnection = getMySQLConnection(server, user, pass);
         if (myConnection != null)
-            Log.info(this.getClass(), "[connect] connected to database");
+            Log.debug(this.getClass(), "[connect] connected to database");
         else
             Log.error(this.getClass(), "[connect] could not provide connection");
         return myConnection != null;
@@ -75,9 +105,9 @@ public class Database {
         return true;
     }
 
-    public Set<XmlLink> getLinksById(int flag, int minId, int maxId) {
+    public Set<XmlLink> selectByLimit(boolean wantXml, int limit, int... flag) {
         if (myConnection == null) {
-            Log.error(this.getClass(), "[getLinksByFlag] database connection not established");
+            Log.error(this.getClass(), "[selectByLimit] database connection not established");
             return null;
         }
         long startTime = System.currentTimeMillis();
@@ -85,23 +115,33 @@ public class Database {
         Set<XmlLink> xmlLinks = new HashSet<XmlLink>();
         try {
             stmt = myConnection.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT id, link, flag, xml FROM " + TABLE_NAME + " WHERE flag = " + flag
-                    + " and id>=" + minId + " and id<" + maxId);
+            String query = "SELECT id, link, flag," + (wantXml ? " xml," : "") + " uuid FROM " + TABLE_NAME + " WHERE ";
+            for (int i = 0; i < flag.length; i++)
+                query += "flag = " + flag[i] + " or ";
+            if (flag.length > 0)
+                query = query.substring(0, query.length() - 4);
+            query += (limit > 0 ? " limit " + limit : "");
+            ResultSet rs = stmt.executeQuery(query);
             while (rs.next())
-                xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs.getString("xml")));
+                if (wantXml)
+                    xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
+                            .getString("xml"), rs.getString("uuid")));
+                else
+                    xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
+                            .getString("uuid")));
             rs.close();
             stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        Log.info(this.getClass(), "[getLinksByFlag] takes %f seconds",
+        Log.debug(this.getClass(), "[selectByLimit] takes %f seconds",
                 (double) (System.currentTimeMillis() - startTime) / 1000);
         return xmlLinks;
     }
 
-    public Set<XmlLink> getLinksByFlag(int flag, int limit) {
+    public Set<XmlLink> selectByUuids(boolean wantXml, Set<String> uuids, int... flag) {
         if (myConnection == null) {
-            Log.error(this.getClass(), "[getLinksByFlag] database connection not established");
+            Log.error(this.getClass(), "[selectByUuids] database connection not established");
             return null;
         }
         long startTime = System.currentTimeMillis();
@@ -109,17 +149,29 @@ public class Database {
         Set<XmlLink> xmlLinks = new HashSet<XmlLink>();
         try {
             stmt = myConnection.createStatement();
-            String limit_str = (limit > 0 ? " limit " + limit : "");
-            ResultSet rs = stmt.executeQuery("SELECT id, link, flag, xml FROM " + TABLE_NAME + " WHERE flag = " + flag
-                    + limit_str);
+            String query = "SELECT id, link, flag," + (wantXml ? " xml," : "") + " uuid FROM " + TABLE_NAME + " WHERE ";
+            for (int i = 0; i < flag.length; i++)
+                query += "flag = " + flag[i] + " or ";
+            if (flag.length > 0)
+                query = query.substring(0, query.length() - 4) + " and ";
+            for (String uuid : uuids)
+                query += "uuid = '" + uuid.replace("-", "").trim() + "' or ";
+            if (flag.length > 0 || uuids.size() > 0)
+                query = query.substring(0, query.length() - 4);
+            ResultSet rs = stmt.executeQuery(query);
             while (rs.next())
-                xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs.getString("xml")));
+                if (wantXml)
+                    xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
+                            .getString("xml"), rs.getString("uuid")));
+                else
+                    xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
+                            .getString("uuid")));
             rs.close();
             stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        Log.info(this.getClass(), "[getLinksByFlag] takes %f seconds",
+        Log.debug(this.getClass(), "[selectByUuids] takes %f seconds",
                 (double) (System.currentTimeMillis() - startTime) / 1000);
         return xmlLinks;
     }
@@ -132,12 +184,12 @@ public class Database {
             return 0;
         }
         long startTime = System.currentTimeMillis();
-        String query = "INSERT INTO " + TABLE_NAME + " (link,flag,xml) VALUES ";
+        String query = "INSERT INTO " + TABLE_NAME + " (link,flag) VALUES ";
         for (String link : links)
-            query += "('" + link + "',0,''),";
+            query += "('" + link + "'," + FLAG_ONLY_LINK + "),";
         query = query.substring(0, query.length() - 1) + ";";
         if (tryUpdate(MAX_TRIES, query)) {
-            Log.info(this.getClass(), "[insertLinks] takes %f seconds to insert %d links",
+            Log.debug(this.getClass(), "[insertLinks] takes %f seconds to insert %d links",
                     (double) (System.currentTimeMillis() - startTime) / 1000, links.size());
             return 1;
         } else
@@ -146,14 +198,14 @@ public class Database {
 
     public int updateXml(XmlLink xmlLink) {
         if (myConnection == null) {
-            Log.error(this.getClass(), "[updateXmls] database connection not established");
+            Log.error(this.getClass(), "[updateXml] database connection not established");
             return -1;
         }
         long startTime = System.currentTimeMillis();
         String query = "UPDATE " + TABLE_NAME + " SET xml = '" + xmlLink.xml.replace("'", "''") + "' WHERE id = "
                 + xmlLink.id + ";";
         if (tryUpdate(MAX_TRIES, query)) {
-            Log.info(this.getClass(), "[updateXmls] takes %f seconds to update 1 xml",
+            Log.debug(this.getClass(), "[updateXml] takes %f seconds to update 1 xml",
                     (double) (System.currentTimeMillis() - startTime) / 1000);
             return 1;
         } else
@@ -177,9 +229,24 @@ public class Database {
             else
                 Log.error(this.getClass(), "[updateXmls] xml %d extraction failed", xmlLink.id);
         }
-        Log.info(this.getClass(), "[updateXmls] takes %f seconds to update %d xmls",
+        Log.debug(this.getClass(), "[updateXmls] takes %f seconds to update %d xmls",
                 (double) (System.currentTimeMillis() - startTime) / 1000, xmlLinks.size());
         return updateCount;
+    }
+
+    public int updateFlag(XmlLink xmlLink, int flag) {
+        if (myConnection == null) {
+            Log.error(this.getClass(), "[updateFlag] database connection not established");
+            return -1;
+        }
+        long startTime = System.currentTimeMillis();
+        String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE id = '" + xmlLink.id + "';";
+        if (tryUpdate(MAX_TRIES, query)) {
+            Log.debug(this.getClass(), "[updateFlag] takes %f seconds to update 1 flag",
+                    (double) (System.currentTimeMillis() - startTime) / 1000);
+            return 1;
+        } else
+            return -1;
     }
 
     public int updateFlags(Set<XmlLink> xmlLinks, int flag) {
@@ -192,11 +259,47 @@ public class Database {
         long startTime = System.currentTimeMillis();
         String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE ";
         for (XmlLink xmlLink : xmlLinks)
-            query += "id='" + xmlLink.id + "' or ";
+            query += "id = '" + xmlLink.id + "' or ";
         query = query.substring(0, query.length() - 4) + ";";
         if (tryUpdate(MAX_TRIES, query)) {
-            Log.info(this.getClass(), "[updateFlags] takes %f seconds to update %d flags",
+            Log.debug(this.getClass(), "[updateFlags] takes %f seconds to update %d flags",
                     (double) (System.currentTimeMillis() - startTime) / 1000, xmlLinks.size());
+            return 1;
+        } else
+            return -1;
+    }
+
+    public int updateUUID(XmlLink xmlLink) {
+        if (myConnection == null) {
+            Log.warning(this.getClass(), "[updateUUID] database connection not established");
+            return -1;
+        }
+        long startTime = System.currentTimeMillis();
+        String query = "UPDATE " + TABLE_NAME + " SET uuid = " + xmlLink.uuid + " WHERE id = '" + xmlLink.id + "';";
+        if (tryUpdate(MAX_TRIES, query)) {
+            Log.debug(this.getClass(), "[updateUUID] takes %f seconds to update 1 UUID",
+                    (double) (System.currentTimeMillis() - startTime) / 1000);
+            return 1;
+        } else
+            return -1;
+    }
+
+    @Deprecated
+    public int updateFlagsByUUID(Set<String> uuids, int flag) {
+        if (uuids.size() == 0)
+            return 0;
+        if (myConnection == null) {
+            Log.warning(this.getClass(), "[updateFlagsByUUID] database connection not established");
+            return -1;
+        }
+        long startTime = System.currentTimeMillis();
+        String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE ";
+        for (String uuid : uuids)
+            query += "uuid = '" + uuid + "' or ";
+        query = query.substring(0, query.length() - 4) + ";";
+        if (tryUpdate(MAX_TRIES, query)) {
+            Log.debug(this.getClass(), "[updateFlagsByUUID] takes %f seconds to update %d flags",
+                    (double) (System.currentTimeMillis() - startTime) / 1000, uuids.size());
             return 1;
         } else
             return -1;

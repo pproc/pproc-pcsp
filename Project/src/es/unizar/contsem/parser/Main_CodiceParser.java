@@ -37,7 +37,7 @@ public class Main_CodiceParser {
 
         Set<XmlLink> xmlLinks;
         int totalCount = 0;
-        while (!(xmlLinks = database.getLinksByFlag(1, QUERY_LIMIT)).isEmpty()) {
+        while (!(xmlLinks = database.selectByLimit(true, QUERY_LIMIT, Database.FLAG_XML_UNCHECKED)).isEmpty()) {
             Set<XmlLink> tempXmlLinks = new HashSet<XmlLink>();
             Model model = ModelFactory.createDefaultModel();
             SAXReader reader = new SAXReader();
