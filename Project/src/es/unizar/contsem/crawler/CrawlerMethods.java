@@ -397,11 +397,11 @@ public class CrawlerMethods {
                         }
                     }
                 }
-                database.updateFlags(xmlLinks, Database.FLAG_CHECKED_VALID);
-                database.updateFlags(altSetWithDeprecatedChecked, Database.FLAG_CHECKED_DEPRECATED);
                 Set<XmlLink> newlyDeprecated = database.selectByUuids(false, uuidsDeprecated);
                 for (XmlLink xmlLink : newlyDeprecated)
                     database.updateFlag(xmlLink, -xmlLink.flag);
+                database.updateFlags(xmlLinks, Database.FLAG_CHECKED_VALID);
+                database.updateFlags(altSetWithDeprecatedChecked, Database.FLAG_CHECKED_DEPRECATED);
                 Log.info(
                         CrawlerMethods.class,
                         "[checkDeprecatedXmls] checked %d xmls: %d checked/valid, %d checked/deprecated, %d new deprecated",
