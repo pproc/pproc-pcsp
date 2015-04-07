@@ -103,7 +103,7 @@ public class CodiceToPprocParser {
 
         // pproc:Contract pc:contractingAuthority
         if (document.getRootElement().element("ContractingParty") != null) {
-            for (Iterator iter = document.getRootElement().element("ContractingParty").element("Party")
+            for (Iterator<?> iter = document.getRootElement().element("ContractingParty").element("Party")
                     .elementIterator("PartyIdentification"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 if (altElement.element("ID").attributeValue("schemeName").equals("ID_PLATAFORMA"))
@@ -176,7 +176,7 @@ public class CodiceToPprocParser {
         // pproc:Contract pproc:delegatingAuthority
         altString2 = null;
         if (document.getRootElement().element("OriginatorCustomerParty") != null) {
-            for (Iterator iter = document.getRootElement().element("OriginatorCustomerParty").element("Party")
+            for (Iterator<?> iter = document.getRootElement().element("OriginatorCustomerParty").element("Party")
                     .elementIterator("PartyIdentification"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 if (altElement.element("ID").attributeValue("schemeName").equals("ID_PLATAFORMA"))
@@ -476,7 +476,7 @@ public class CodiceToPprocParser {
 
             // pproc:ContractObject pproc:provision
             if (document.getRootElement().element("ProcurementProject").element("RequestForTenderLine") != null) {
-                for (Iterator iter = document.getRootElement().element("ProcurementProject")
+                for (Iterator<?> iter = document.getRootElement().element("ProcurementProject")
                         .elementIterator("RequestForTenderLine"); iter.hasNext();) {
                     altElement = (Element) iter.next();
                     Resource offeringResource = model.createResource(objectResource + "Offering_"
@@ -621,7 +621,7 @@ public class CodiceToPprocParser {
 
             if (document.getRootElement().element("TenderingTerms").element("TendererQualificationRequest")
                     .element("SpecificTendererRequirement") != null)
-                for (Iterator iter = document.getRootElement().element("TenderingTerms")
+                for (Iterator<?> iter = document.getRootElement().element("TenderingTerms")
                         .element("TendererQualificationRequest").elementIterator("SpecificTendererRequirement"); iter
                         .hasNext();) {
                     altElement = (Element) iter.next();
@@ -667,7 +667,7 @@ public class CodiceToPprocParser {
                 }
 
             // pc:AwardCriteriaCombination pc:awardCriterion
-            for (Iterator iter = document.getRootElement().element("TenderingTerms").element("AwardingTerms")
+            for (Iterator<?> iter = document.getRootElement().element("TenderingTerms").element("AwardingTerms")
                     .elementIterator("AwardingCriteria"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 Resource criterionResource = model.createResource(criteriaCombinationResource + "/Criterion"
@@ -727,7 +727,7 @@ public class CodiceToPprocParser {
             cpeResource.addProperty(RDF.type, PPROC.ContractProcedureSpecifications);
             Resource addionalObligationsResource = model.createResource(cpeResource + "/ContractAdditionalObligations");
             addionalObligationsResource.addProperty(RDF.type, PPROC.ContractAdditionalObligations);
-            for (Iterator iter = document.getRootElement().element("TenderingTerms")
+            for (Iterator<?> iter = document.getRootElement().element("TenderingTerms")
                     .elementIterator("RequiredFinancialGuarantee"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 if ((altString = altElement.elementText("GuaranteeTypeCode")) != null) {
@@ -930,14 +930,14 @@ public class CodiceToPprocParser {
             tenderRequirementsResource.addProperty(RDF.type, PPROC.TenderRequirements);
 
             // pproc:TenderRequirements pproc:tenderDocumentNeeds
-            for (Iterator iter = document.getRootElement().element("TenderingTerms")
+            for (Iterator<?> iter = document.getRootElement().element("TenderingTerms")
                     .elementIterator("TenderPreparation"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 altString2 = "Documentos sobre " + altElement.elementText("TenderEnvelopeID") + " : ";
                 if ((altString = altElement.elementText("Description")) != null)
                     altString2 += " | " + altString;
                 if (altElement.element("DocumentTenderRequirement") != null) {
-                    for (Iterator iter2 = altElement.elementIterator("DocumentTenderRequirement"); iter2.hasNext();) {
+                    for (Iterator<?> iter2 = altElement.elementIterator("DocumentTenderRequirement"); iter2.hasNext();) {
                         Element altElement2 = (Element) iter2.next();
                         if ((altString = altElement2.elementText("Name")) != null)
                             altString2 += " | " + altString;
@@ -1015,7 +1015,7 @@ public class CodiceToPprocParser {
             contractActivitiesResource.addProperty(RDF.type, PPROC.ContractActivities);
 
             // pproc:ContractActivities pproc:tenderMeeting
-            for (Iterator iter = document.getRootElement().element("TenderingProcess")
+            for (Iterator<?> iter = document.getRootElement().element("TenderingProcess")
                     .elementIterator("OpenTenderEvent"); iter.hasNext();) {
                 altElement = (Element) iter.next();
                 Resource tenderMeetingResource = model.createResource(contractActivitiesResource + "/Event_"
@@ -1098,7 +1098,7 @@ public class CodiceToPprocParser {
             // pproc:ContractOrProcedureExtinction extinctionCause
             if (document.getRootElement().element("TenderResult") != null) {
 
-                for (Iterator iter = document.getRootElement().elementIterator("TenderResult"); iter.hasNext();) {
+                for (Iterator<?> iter = document.getRootElement().elementIterator("TenderResult"); iter.hasNext();) {
                     altElement = (Element) iter.next();
                     boolean isAwarded = false;
                     boolean isFormalized = false;

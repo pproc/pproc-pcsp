@@ -37,7 +37,7 @@ public class Main_CodiceParser {
 
         Set<XmlLink> xmlLinks;
         int totalCount = 0;
-        while (!(xmlLinks = database.selectByLimit(true, QUERY_LIMIT, Database.FLAG_XML_UNCHECKED)).isEmpty()) {
+        while (!(xmlLinks = database.selectByLimit(true, QUERY_LIMIT, Database.FLAG_CHECKED_VALID)).isEmpty()) {
             Set<XmlLink> tempXmlLinks = new HashSet<XmlLink>();
             Model model = ModelFactory.createDefaultModel();
             SAXReader reader = new SAXReader();
@@ -51,7 +51,7 @@ public class Main_CodiceParser {
                     try {
                         CodiceToPprocParser.parseCodiceXML(model, document);
                     } catch (Exception ex) {
-                        Log.error(Main_CodiceParser.class, "[start] error parsing xml %d, see codice_doc.xml",
+                        Log.error(Main_CodiceParser.class, "[start] error parsing xml %d, see debug/codice_doc.xml",
                                 xmlLink.id);
                         Utils.writeInfile("debug/codice_doc.xml", document.asXML());
                         ex.printStackTrace();
@@ -69,11 +69,12 @@ public class Main_CodiceParser {
                     String.format("pcsp-output/pcsp-output-%d-%d.ttl", totalCount - tempCount + 1, totalCount));
             model.removeAll();
             model.close();
-            database.updateFlags(tempXmlLinks, 3);
+            database.updateFlags(tempXmlLinks, Database.FLAG_CHECKED_PARSED);
             model = ModelFactory.createDefaultModel();
             tempCount = 0;
             tempXmlLinks.clear();
             Log.info(Main_CodiceParser.class, "%d XMLs han fallado", xmlErrorCount);
+            reader = null;
         }
         Log.info(Main_CodiceParser.class, "proceso finalizado");
     }
