@@ -578,16 +578,12 @@ public class Methods {
 			InterruptedException {
 		int xmlErrorCount = 0;
 		Set<XmlLink> xmlLinks;
-		int totalCount = 0;
 		while (!(xmlLinks = database.selectByLimit(true, MAX_BUFFER_PARSE,
 				Database.FLAG_CHECKED_VALID)).isEmpty()) {
 			Set<XmlLink> tempXmlLinks = new HashSet<XmlLink>();
 			Model model = ModelFactory.createDefaultModel();
 			SAXReader reader = new SAXReader();
-			int tempCount = 0;
 			for (XmlLink xmlLink : xmlLinks) {
-				tempCount++;
-				totalCount++;
 				try {
 					org.dom4j.Document document = reader
 							.read(new ByteArrayInputStream(xmlLink.xml
@@ -616,14 +612,16 @@ public class Methods {
 					xmlErrorCount++;
 				}
 			}
-			Utils.writeModel(model, String.format(
-					"pcsp-output/pcsp-output-%d-%d.ttl", totalCount - tempCount
-							+ 1, totalCount));
+			Utils.writeModel(model,
+					String.format("pcsp-output/pcsp-output-%d-%d.ttl",
+							tempXmlLinks.toArray(new XmlLink[tempXmlLinks
+									.size()])[0].id,
+							tempXmlLinks.toArray(new XmlLink[tempXmlLinks
+									.size()])[tempXmlLinks.size() - 1].id));
 			model.removeAll();
 			model.close();
 			database.updateFlags(tempXmlLinks, Database.FLAG_CHECKED_PARSED);
 			model = ModelFactory.createDefaultModel();
-			tempCount = 0;
 			tempXmlLinks.clear();
 			Log.info(Methods.class,
 					"[parseXmls] %d/%d parsed documents (%d errors so far)",
