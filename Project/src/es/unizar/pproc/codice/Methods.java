@@ -1,9 +1,14 @@
-package es.unizar.contsem.crawler;
+package es.unizar.pproc.codice;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,15 +23,19 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import es.unizar.contsem.Database;
-import es.unizar.contsem.Log;
-import es.unizar.contsem.Utils;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 
-public class CrawlerMethods {
+import es.unizar.pproc.Log;
+import es.unizar.pproc.Utils;
 
+public class Methods {
+
+	private static final int MAX_TRY_COUNT = 6;
 	private static final int MAX_BUFFER_GET = 50;
 	private static final int MAX_BUFFER_UPDATE = 500;
 	private static final int MAX_BUFFER_CHECK = 100;
+	private static final int MAX_BUFFER_PARSE = 2000;
 	private static final int DELAY_DOWNLOAD_XML = 1000;
 	private static final String FORM_NEXTPAGE[] = {
 			"?CpvorigenmultiplecpvMultiple=BusquedaVIS_UOE&cpvPrincipalmultiplecpvMultiple=&cpvViewmultiplecpvMultiple=%23%7BbeanCpvPpt.cpv%7D&javax.faces.ViewState=j_id",
@@ -112,11 +121,11 @@ public class CrawlerMethods {
 		try {
 			petition = form + FORM_NEXTPAGE[0] + pag[0] + FORM_NEXTPAGE[1]
 					+ pag[1] + FORM_NEXTPAGE[2];
-			Log.debug(CrawlerMethods.class,
+			Log.debug(Methods.class,
 					"[getNextPagePetition] nextPetition pages %s - %s", pag[0],
 					pag[1]);
 		} catch (java.lang.ArrayIndexOutOfBoundsException ex) {
-			Log.error(CrawlerMethods.class,
+			Log.error(Methods.class,
 					"[getNextPagePetition] ArrayIndexOutOfBoundsException");
 			return null;
 		}
@@ -164,7 +173,7 @@ public class CrawlerMethods {
 		// caso ultima pagina o error de parseo
 		if (matches.length < 20) {
 			Utils.writeInfile("debug/doc.html", doc.html());
-			Log.warning(CrawlerMethods.class,
+			Log.warning(Methods.class,
 					"MIRA DOC.HTML PARA CONFIRMAR IDS PLATAFORMA");
 		}
 		return ids;
@@ -175,7 +184,7 @@ public class CrawlerMethods {
 		Document document = null;
 		boolean success = false;
 		int tryCount = 0;
-		while (!success && tryCount < Utils.MAX_TRY_COUNT) {
+		while (!success && tryCount < MAX_TRY_COUNT) {
 			try {
 				tryCount++;
 				Response response = Jsoup
@@ -189,20 +198,65 @@ public class CrawlerMethods {
 				document = response.parse();
 				success = true;
 			} catch (IOException e) {
-				Log.warning(
-						CrawlerMethods.class,
-						"[retrieveDocument] getNextDocument try number %d failed",
-						tryCount);
+				Log.warning(Methods.class,
+						"[retrieveDocument] try number %d failed", tryCount);
 			} catch (Exception e) {
-				Log.error(CrawlerMethods.class,
-						"[retrieveDocument] getNextDocument unexpected error");
+				Log.error(Methods.class, "[retrieveDocument] unexpected error");
 				e.printStackTrace();
 			}
 		}
 		if (!success)
-			Log.error(CrawlerMethods.class,
-					"getNextDocument could not retrieve data");
+			Log.error(Methods.class,
+					"[retrieveDocument] could not retrieve data");
 		return document;
+	}
+
+	public static String getXML(String urlToRead) {
+		DefaultTrustManager.CrearConexionHTTPS();
+		URL url;
+		HttpURLConnection conn;
+		BufferedReader rd;
+		String line, result = "", result2 = "";
+		boolean success = false;
+		int tryCount = 0;
+		while (!success && tryCount < MAX_TRY_COUNT) {
+			tryCount++;
+			try {
+				url = new URL(urlToRead);
+				conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				rd = new BufferedReader(new InputStreamReader(
+						conn.getInputStream()));
+				while ((line = rd.readLine()) != null)
+					result += line;
+				String[] url2 = Utils.search("url='.*'", result);
+				String newURL = null;
+				if (url2.length > 0) {
+					newURL = url2[0].replaceAll("url='",
+							"https://contrataciondelestado.es");
+				}
+				newURL = newURL.replaceAll("'", "");
+				url = new URL(newURL);
+				conn = (HttpURLConnection) url.openConnection();
+				conn.setRequestMethod("GET");
+				rd = new BufferedReader(new InputStreamReader(
+						conn.getInputStream(), Charset.forName("UTF-8")));
+				while ((line = rd.readLine()) != null)
+					result2 += line;
+				rd.close();
+				result2.replaceAll("'", "''");
+				success = true;
+				conn.disconnect();
+			} catch (Exception e) {
+				Log.warning(Utils.class, "try number %d at getXML failed",
+						tryCount);
+			}
+		}
+		if (!success) {
+			Log.error(Utils.class, "[getXML] could not retrieve the XML");
+			return "<error/>";
+		}
+		return result2;
 	}
 
 	private static String getUUID(org.dom4j.Document doc) {
@@ -214,7 +268,7 @@ public class CrawlerMethods {
 	 * them in a database.
 	 * 
 	 * @author gesteban, danielrusa
-	 * @see es.unizar.contsem.Database
+	 * @see es.unizar.pproc.codice.Database
 	 */
 	public static void getXmlLinks(Database database) throws IOException {
 
@@ -234,7 +288,7 @@ public class CrawlerMethods {
 		sessionIdCookie = response.cookies().get("JSESSIONID");
 		document = response.parse();
 		petition = getAdvSearchPetition(document);
-		Log.info(CrawlerMethods.class,
+		Log.info(Methods.class,
 				"[getXmlLinks] get to main web to get sessionIdCookie successful");
 
 		// Get to advanced search to get paged petition base url
@@ -250,7 +304,7 @@ public class CrawlerMethods {
 		document = response.parse();
 		petition = getPagedBasePetition(document);
 		Log.info(
-				CrawlerMethods.class,
+				Methods.class,
 				"[getXmlLinks] get to advanced search to get paged petition base url successful");
 
 		// Post to first page
@@ -269,9 +323,8 @@ public class CrawlerMethods {
 			petition = getContractPetition(id);
 			altDocument = retrieveDocument(petition, sessionIdCookie);
 			database.insertLinks(getLinks(altDocument));
-			// links.addAll(getLinks(document));
 		}
-		Log.info(CrawlerMethods.class, "[getXmlLinks] first page done");
+		Log.info(Methods.class, "[getXmlLinks] first page done");
 
 		// Post to next pages
 		int numberOfErrors = 0;
@@ -280,7 +333,7 @@ public class CrawlerMethods {
 				petition = getNextPagePetition(document);
 			else
 				Log.error(
-						CrawlerMethods.class,
+						Methods.class,
 						"[getXmlLinks] web document incorrect, trying same last petition again (%d)",
 						++numberOfErrors);
 			document = retrieveDocument(petition, sessionIdCookie);
@@ -291,8 +344,7 @@ public class CrawlerMethods {
 				// links.addAll(getLinks(document));
 			}
 			double por = ((actualPage(document) * (1.0)) / (finalPage(document) * (1.0))) * 100.0;
-			Log.info(CrawlerMethods.class,
-					"[getXmlLinks] page %d/%d done - %.4f%%",
+			Log.info(Methods.class, "[getXmlLinks] page %d/%d done - %.4f%%",
 					actualPage(document), finalPage(document), por);
 		}
 	}
@@ -301,8 +353,8 @@ public class CrawlerMethods {
 	 * Download XML/CODICE files from http://contrataciondelestado.es/ and store
 	 * them in a database.
 	 * 
-	 * @author gesteban
-	 * @see es.unizar.contsem.Database
+	 * @author gesteban, danielrusa
+	 * @see es.unizar.pproc.codice.Database
 	 */
 	public static void downloadXmls(Database database)
 			throws FileNotFoundException, UnsupportedEncodingException,
@@ -316,12 +368,12 @@ public class CrawlerMethods {
 		for (Iterator<XmlLink> iter = xmlLinks.iterator(); iter.hasNext();) {
 			XmlLink xmlLink = iter.next();
 			tempCount++;
-			xml = Utils.getXML(xmlLink.link);
+			xml = getXML(xmlLink.link);
 			xmlLink.xml = xml;
 			tempXmlLinks.add(xmlLink);
 			if (tempCount == MAX_BUFFER_GET) {
 				Log.info(
-						CrawlerMethods.class,
+						Methods.class,
 						"[downloadXmls] takes %f seconds to download %d xmls",
 						(double) (System.currentTimeMillis() - startTime) / 1000,
 						tempXmlLinks.size());
@@ -345,7 +397,7 @@ public class CrawlerMethods {
 	 * Exception.
 	 * 
 	 * @author gesteban
-	 * @see es.unizar.contsem.Database
+	 * @see es.unizar.pproc.codice.Database
 	 */
 	public static void updateCorruptedXmls(Database database)
 			throws InterruptedException, DocumentException {
@@ -363,7 +415,7 @@ public class CrawlerMethods {
 					xmlLinksToUpdate.add(xmlLink);
 				} catch (org.dom4j.DocumentException ex) {
 					errorCount++;
-					String xml = Utils.getXML(xmlLink.link);
+					String xml = getXML(xmlLink.link);
 					Thread.sleep(1000);
 					try {
 						document = reader.read(new ByteArrayInputStream(
@@ -372,7 +424,7 @@ public class CrawlerMethods {
 						xmlLinksToUpdate.add(xmlLink);
 						database.updateXml(xmlLink);
 					} catch (org.dom4j.DocumentException ex2) {
-						Log.error(CrawlerMethods.class,
+						Log.error(Methods.class,
 								"[updateCorruptedXmls] %d still corrupted",
 								xmlLink.id);
 						database.updateFlag(xmlLink,
@@ -386,7 +438,7 @@ public class CrawlerMethods {
 					xmlLink.uuid = getUUID(document);
 				} catch (Exception ex) {
 					Utils.writeInfile("debug/codice.xml", xmlLink.xml);
-					Log.error(CrawlerMethods.class,
+					Log.error(Methods.class,
 							"[updateCorruptedXmls] error, exiting", xmlLink.id);
 					System.exit(-1);
 				}
@@ -397,7 +449,7 @@ public class CrawlerMethods {
 			xmlLinks = database.selectByLimit(true, MAX_BUFFER_UPDATE,
 					Database.FLAG_XML_UNCHECKED);
 		}
-		Log.info(CrawlerMethods.class, "[updateCorruptedXmls] errorCount = "
+		Log.info(Methods.class, "[updateCorruptedXmls] errorCount = "
 				+ errorCount);
 	}
 
@@ -407,7 +459,7 @@ public class CrawlerMethods {
 	 * for a new version with corrections.
 	 * 
 	 * @author gesteban
-	 * @see es.unizar.contsem.Database
+	 * @see es.unizar.pproc.codice.Database
 	 */
 	public static void checkDeprecatedXmls(Database database)
 			throws InterruptedException, DocumentException {
@@ -459,7 +511,7 @@ public class CrawlerMethods {
 								}
 							}
 							if (!success) {
-								Log.error(CrawlerMethods.class,
+								Log.error(Methods.class,
 										"[checkDeprecatedXmls] unexpected miss element");
 								Utils.writeInfile("debug/codice.xml",
 										document.asXML());
@@ -476,7 +528,7 @@ public class CrawlerMethods {
 							break;
 						default:
 							Log.warning(
-									CrawlerMethods.class,
+									Methods.class,
 									"[checkDeprecatedXmls] UBLExtension child %s not supported",
 									altElement.getName());
 						}
@@ -497,7 +549,7 @@ public class CrawlerMethods {
 				database.updateFlags(altSetWithDeprecatedChecked,
 						Database.FLAG_CHECKED_DEPRECATED);
 				Log.info(
-						CrawlerMethods.class,
+						Methods.class,
 						"[checkDeprecatedXmls] checked %d xmls: %d checked/valid, %d checked/deprecated, %d new deprecated",
 						xmlLinks.size() + altSetWithDeprecatedChecked.size(),
 						xmlLinks.size(), altSetWithDeprecatedChecked.size(),
@@ -510,16 +562,80 @@ public class CrawlerMethods {
 			}
 		} catch (Exception ex) {
 			Utils.writeInfile("debug/codice.xml", document.asXML());
-			Log.error(CrawlerMethods.class,
-					"[checkDeprecatedXmls] codice xml saved");
+			Log.error(Methods.class, "[checkDeprecatedXmls] codice xml saved");
 			ex.printStackTrace();
+		}
+	}
+
+	/**
+	 * Transforms the XML/CODICE documents stored in a database into RDF
+	 * following PPROC ontology.
+	 * 
+	 * @author gesteban
+	 */
+	public static void parseXmls(Database database)
+			throws FileNotFoundException, UnsupportedEncodingException,
+			InterruptedException {
+		int xmlErrorCount = 0;
+		Set<XmlLink> xmlLinks;
+		int totalCount = 0;
+		while (!(xmlLinks = database.selectByLimit(true, MAX_BUFFER_PARSE,
+				Database.FLAG_CHECKED_VALID)).isEmpty()) {
+			Set<XmlLink> tempXmlLinks = new HashSet<XmlLink>();
+			Model model = ModelFactory.createDefaultModel();
+			SAXReader reader = new SAXReader();
+			int tempCount = 0;
+			for (XmlLink xmlLink : xmlLinks) {
+				tempCount++;
+				totalCount++;
+				try {
+					org.dom4j.Document document = reader
+							.read(new ByteArrayInputStream(xmlLink.xml
+									.getBytes(StandardCharsets.UTF_8)));
+					try {
+						CodiceToPprocParser.parseCodiceXML(model, document);
+					} catch (Exception ex) {
+						Log.error(
+								Methods.class,
+								"[parseXmls] error parsing xml %d, see debug/codice_doc.xml",
+								xmlLink.id);
+						Utils.writeInfile("debug/codice_doc.xml",
+								document.asXML());
+						ex.printStackTrace();
+						return;
+					}
+					Log.debug(Methods.class,
+							"[parseXmls] xml %d parsed and inserted in model",
+							xmlLink.id);
+					tempXmlLinks.add(xmlLink);
+				} catch (DocumentException exc) {
+					Log.error(Methods.class,
+							"[parseXmls] error reading xml %d [%d bytes]",
+							xmlLink.id,
+							xmlLink.xml.getBytes(StandardCharsets.UTF_8).length);
+					xmlErrorCount++;
+				}
+			}
+			Utils.writeModel(model, String.format(
+					"pcsp-output/pcsp-output-%d-%d.ttl", totalCount - tempCount
+							+ 1, totalCount));
+			model.removeAll();
+			model.close();
+			database.updateFlags(tempXmlLinks, Database.FLAG_CHECKED_PARSED);
+			model = ModelFactory.createDefaultModel();
+			tempCount = 0;
+			tempXmlLinks.clear();
+			Log.info(Methods.class,
+					"[parseXmls] %d/%d parsed documents (%d errors so far)",
+					tempXmlLinks.size(), xmlLinks.size(), xmlErrorCount);
+			reader = null;
 		}
 	}
 
 	public static void main(String[] args) {
 		Log.setLevel(Log.INFO);
 		if (args.length != 3) {
-			Log.error(CrawlerMethods.class,
+			Log.error(Methods.class,
 					"need database parameters: database/table_URL username password");
 			return;
 		}
@@ -527,10 +643,11 @@ public class CrawlerMethods {
 		Database database = new Database(args[0], args[1], args[2]);
 		database.connect();
 		try {
-			// CrawlerMethods.getXmlLinks(database);
-			// CrawlerMethods.downloadXmls(database);
-			// CrawlerMethods.updateCorruptedXmls(database);
-			CrawlerMethods.checkDeprecatedXmls(database);
+			// Methods.getXmlLinks(database);
+			// Methods.downloadXmls(database);
+			// Methods.updateCorruptedXmls(database);
+			// Methods.checkDeprecatedXmls(database);
+			Methods.parseXmls(database);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

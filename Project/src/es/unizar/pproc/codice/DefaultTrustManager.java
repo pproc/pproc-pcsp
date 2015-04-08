@@ -1,4 +1,4 @@
-package es.unizar.contsem.crawler;
+package es.unizar.pproc.codice;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -11,7 +11,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import es.unizar.contsem.Log;
+import es.unizar.pproc.Log;
 
 public class DefaultTrustManager implements X509TrustManager {
 

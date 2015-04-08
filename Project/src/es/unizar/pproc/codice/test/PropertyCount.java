@@ -1,4 +1,4 @@
-package es.unizar.contsem.test;
+package es.unizar.pproc.codice.test;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,10 +15,10 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
-import es.unizar.contsem.Database;
-import es.unizar.contsem.Log;
-import es.unizar.contsem.Utils;
-import es.unizar.contsem.crawler.XmlLink;
+import es.unizar.pproc.Log;
+import es.unizar.pproc.Utils;
+import es.unizar.pproc.codice.Database;
+import es.unizar.pproc.codice.XmlLink;
 
 public class PropertyCount {
 

@@ -1,4 +1,4 @@
-package es.unizar.contsem;
+package es.unizar.pproc.codice;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,7 +8,8 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Set;
 
-import es.unizar.contsem.crawler.XmlLink;
+import es.unizar.pproc.Log;
+import es.unizar.pproc.Utils;
 
 /**
  * Simple database class. This class assume the existence of a table named

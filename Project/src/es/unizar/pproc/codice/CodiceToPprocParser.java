@@ -1,4 +1,4 @@
-package es.unizar.contsem.parser;
+package es.unizar.pproc.codice;
 
 import java.util.Iterator;
 
@@ -13,12 +13,12 @@ import com.hp.hpl.jena.sparql.vocabulary.FOAF;
 import com.hp.hpl.jena.vocabulary.DCTerms;
 import com.hp.hpl.jena.vocabulary.RDF;
 
-import es.unizar.contsem.vocabulary.CPV;
-import es.unizar.contsem.vocabulary.GR;
-import es.unizar.contsem.vocabulary.ORG;
-import es.unizar.contsem.vocabulary.PC;
-import es.unizar.contsem.vocabulary.PPROC;
-import es.unizar.contsem.vocabulary.S;
+import es.unizar.pproc.vocabulary.CPV;
+import es.unizar.pproc.vocabulary.GR;
+import es.unizar.pproc.vocabulary.ORG;
+import es.unizar.pproc.vocabulary.PC;
+import es.unizar.pproc.vocabulary.PPROC;
+import es.unizar.pproc.vocabulary.S;
 
 /**
  * Transforms an XML/CODICE document into RDF following PPROC ontology.

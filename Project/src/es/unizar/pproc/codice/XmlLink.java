@@ -1,4 +1,4 @@
-package es.unizar.contsem.crawler;
+package es.unizar.pproc.codice;
 
 public class XmlLink {
 
