@@ -1,4 +1,4 @@
-package es.unizar.contsem.vocabulary;
+package es.unizar.pproc.vocabulary;
 
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
