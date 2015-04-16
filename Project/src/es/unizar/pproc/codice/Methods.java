@@ -622,10 +622,10 @@ public class Methods {
 			model.close();
 			database.updateFlags(tempXmlLinks, Database.FLAG_CHECKED_PARSED);
 			model = ModelFactory.createDefaultModel();
-			tempXmlLinks.clear();
 			Log.info(Methods.class,
 					"[parseXmls] %d/%d parsed documents (%d errors so far)",
 					tempXmlLinks.size(), xmlLinks.size(), xmlErrorCount);
+			tempXmlLinks.clear();
 			reader = null;
 		}
 	}
