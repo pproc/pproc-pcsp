@@ -589,7 +589,7 @@ public class Methods {
 							.read(new ByteArrayInputStream(xmlLink.xml
 									.getBytes(StandardCharsets.UTF_8)));
 					try {
-						CodiceToPprocParser.parseCodiceXML(model, document);
+						Codice2Pproc.parseCodiceXML(model, document);
 					} catch (Exception ex) {
 						Log.error(
 								Methods.class,
