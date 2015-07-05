@@ -1,4 +1,4 @@
-package es.unizar.pproc.codice;
+﻿package es.unizar.pproc.codice;
 
 import java.util.Iterator;
 
@@ -49,13 +49,13 @@ public class Codice2Pproc {
         }
 
         // ProcurementProject/TypeCode
-        // TODO parseo independiente de versión (parseo del .gc)
+        // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
         if ((altString = altElement.elementText("TypeCode")) != null) {
             switch (altString) {
             case "1":
                 rootResource.addProperty(RDF.type, PPROC.SuppliesContract);
                 // ProcurementProject/SubTypeCode
-                // TODO parseo independiente de versión (parseo del .gc)
+                // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
                 if ((altString = altElement.elementText("SubTypeCode")) != null)
                     switch (altString) {
                     case "1":
@@ -428,7 +428,7 @@ public class Codice2Pproc {
             rootResource.addProperty(PC.awardCriteriaCombination, criteriaCombinationResource);
 
             // TenderingTerms/AwardingTerms/WeightingAlgorithmCode
-            // TODO parseo independiente de versión (parseo del .gc)
+            // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
             if ((altString = altElement.element("AwardingTerms").elementText("WeightingAlgorithmCode")) != null)
                 switch (altString) {
                 case "1":
@@ -458,7 +458,7 @@ public class Codice2Pproc {
                 criteriaCombinationResource.addProperty(PC.awardCriterion, criterionResource);
 
                 // TenderingTerms/AwardingTerms/AwardingCriteria/AwardingCriteriaTypeCode
-                // TODO parseo independiente de versión (parseo del .gc)
+                // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
                 if ((altString = altElement2.elementText("AwardingCriteriaTypeCode")) != null)
                     switch (altString) {
                     case "SUBJ":
@@ -821,7 +821,7 @@ public class Codice2Pproc {
             contractResource.addProperty(PPROC.contractProcedureSpecifications, cpeResource);
 
             // TenderingProcess/UrgencyCode
-            // TODO parseo independiente de versión (parseo del .gc)
+            // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
             if ((altString = altElement.elementText("UrgencyCode")) != null)
                 switch (altString) {
                 case "1":
@@ -835,7 +835,7 @@ public class Codice2Pproc {
                 }
 
             // TenderingProcess/ProcedureCode
-            // TODO parseo independiente de versión (parseo del .gc)
+            // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
             if ((altString = altElement.elementText("ProcedureCode")) != null)
                 switch (altString) {
                 case "1":
@@ -860,7 +860,7 @@ public class Codice2Pproc {
                 }
 
             // TenderingProcess/ContractingSystemCode
-            // TODO parseo independiente de versión (parseo del .gc)
+            // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
             if ((altString = altElement.elementText("ContractingSystemCode")) != null)
                 switch (altString) {
                 case "1":
@@ -909,7 +909,8 @@ public class Codice2Pproc {
                         break;
                     }
 
-                // TODO añadir dcterms:description de TenderingProcess/FrameworkAgreement//Justification
+                // TODO add dcterms:description from
+                // TenderingProcess/FrameworkAgreement//Justification
             }
 
             // TenderingProcess/TenderSubmissionDeadlinePeriod
@@ -952,7 +953,7 @@ public class Codice2Pproc {
 
                     // TenderingProcess/OpenTenderEvent/TypeCode
                     if ((altString = altElement2.elementText("TypeCode")) != null)
-                        // TODO parseo independiente de versión (parseo del .gc)
+                        // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
                         switch (altString) {
                         case "1":
                             tenderMeetingResource.addProperty(PPROC.tenderPurpose, "Apertura sobre administrativa",
@@ -1039,7 +1040,7 @@ public class Codice2Pproc {
                 boolean isFormalized = false;
 
                 // TenderResult/ResultCode
-                // TODO parseo independiente de versión (parseo del .gc)
+                // TODO make it version independent (https://contrataciondelestado.es/codice/cl/)
                 if ((altString = altElement.elementText("ResultCode")) != null) {
                     switch (altString) {
                     case "2":
@@ -1088,15 +1089,18 @@ public class Codice2Pproc {
                     if (isFormalized)
                         tenderResource.addProperty(RDF.type, PPROC.FormalizedTender);
 
-                    // TODO Seguro que se pueden añadir las propiedades pc:awardDate y pproc:formalizedDate
+                    // TODO Seguro que se pueden añadir las propiedades
+                    // pc:awardDate y pproc:formalizedDate
+                    if ((altString = altElement.elementText("StartDate")) != null) {
+
+                    }
 
                     // TenderResult/WinningParty
                     if ((altElement2 = altElement.element("WinningParty")) != null) {
 
                         // TenderResult/WinningParty/PartyIdentification/ID
                         altString = null;
-                        for (Iterator<?> iter2 = altElement2.elementIterator("PartyIdentification"); iter2
-                                .hasNext();) {
+                        for (Iterator<?> iter2 = altElement2.elementIterator("PartyIdentification"); iter2.hasNext();) {
                             altElement3 = (Element) iter2.next();
                             if (altElement3.element("ID").attributeValue("schemeName").equals("CIF")) {
                                 altString = altElement3.elementText("ID");
@@ -1121,7 +1125,8 @@ public class Codice2Pproc {
 
                         // TenderResult/WinningParty/PhysicalLocation/Address
                         // TenderResult/WinningParty/PostalAddress
-                        // TODO copiar esta manera de poner la direccion en otras apariciones de Location o Address
+                        // TODO copiar esta manera de poner la direccion en
+                        // otras apariciones de Location o Address
                         if ((altElement2.element("PhysicalLocation") != null && (altElement3 = altElement2.element(
                                 "PhysicalLocation").element("Address")) != null)
                                 || (altElement3 = altElement2.element("PostalAddress")) != null) {
@@ -1146,15 +1151,11 @@ public class Codice2Pproc {
                         }
 
                         // TenderResult/WinningParty/Contact
-                        // TODO copiar esta manera de poner el contacto en otras apariciones de Contact
                         if (altElement2.element("Contact") != null) {
-                            // TenderResult/WinningParty/Contact/Telephone
                             if ((altString = altElement2.element("Contact").elementText("Telephone")) != null)
                                 supplierResource.addProperty(S.telephone, altString, XSDDatatype.XSDstring);
-                            // TenderResult/WinningParty/Contact/Telefax
                             if ((altString = altElement2.element("Contact").elementText("Telefax")) != null)
                                 supplierResource.addProperty(S.faxNumber, altString, XSDDatatype.XSDstring);
-                            // TenderResult/WinningParty/Contact/ElectronicMail
                             if ((altString = altElement2.element("Contact").elementText("ElectronicMail")) != null)
                                 supplierResource.addProperty(S.email, altString, XSDDatatype.XSDstring);
                         }
@@ -1230,27 +1231,33 @@ public class Codice2Pproc {
                 documentResource.addProperty(DCTerms.dateSubmitted, altString);
         }
 
+        // TODO modifications added in CODICE 2.02, which specification is still unavailable
+        // b2bcontrataciondelestado@minhap.es mailing list should deliver CODICE update
         // ContractModification
-        // TODO ¿donde está la especificación de este nivel? ¿CODICE 2.02?
         // if ((altElement = root.element("ContractModification")) != null) {
         //
         // // ContractModification/ContractModificationDocumentReference
-        // if (altElement.element("ContractModificationDocumentReference") != null
-        // && (altString = altElement.element("Attachment").element("ExternalReference").elementText("URI")) != null) {
+        // if (altElement.element("ContractModificationDocumentReference") !=
+        // null
+        // && (altString =
+        // altElement.element("Attachment").element("ExternalReference").elementText("URI"))
+        // != null) {
         // Resource documentResource = model.createResource(altString);
         // documentResource.addProperty(RDF.type, FOAF.Document);
-        // contractResource.addProperty(PPROC.additionalDocumentReference, documentResource);
+        // contractResource.addProperty(PPROC.additionalDocumentReference,
+        // documentResource);
         //
-        // // ContractModification/ContractModificationDocumentReference/IssueDate
+        // //
+        // ContractModification/ContractModificationDocumentReference/IssueDate
         // if ((altString = altElement.elementText("IssueDate")) != null)
         // documentResource.addProperty(DCTerms.dateSubmitted, altString);
         // }
         // }
 
-        // TODO notices
-        // TODO IssueDate -> en anuncios (fecha de envio)
-        // TODO IssueTime -> en anuncios (fecha de envio)
-        // TODO Note -> en anuncios (descripción textual)
+        // TODO Notices
+        // TODO Notice:IssueDate -> send date
+        // TODO Notice:IssueTime -> send date
+        // TODO Notice:Note -> description
 
         // ProcurementProjectLot
         if (root.element("ProcurementProjectLot") == null) {
@@ -1283,10 +1290,7 @@ public class Codice2Pproc {
                 }
             }
         }
-
     }
-
-    // TODO CODICE % used? PPROC % used?
 
     private static int eventId = 1;
 

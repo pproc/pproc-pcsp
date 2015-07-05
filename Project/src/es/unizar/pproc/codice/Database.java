@@ -1,4 +1,4 @@
-package es.unizar.pproc.codice;
+﻿package es.unizar.pproc.codice;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,6 +27,8 @@ import es.unizar.pproc.Utils;
  *
  */
 public class Database {
+
+	public static final String TAG = Database.class.getSimpleName();
 
 	/**
 	 * Entry without any content at 'xml' column
@@ -67,17 +69,13 @@ public class Database {
 	private int MAX_TRIES = 2;
 	private int numberOfInsertErrors = 0;
 
-	private static Connection getMySQLConnection(String server, String user,
-			String pass) {
+	private static Connection getMySQLConnection(String server, String user, String pass) {
 		Connection conexion = null;
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			conexion = DriverManager.getConnection(server, user, pass);
 		} catch (Exception ex) {
-			Log.error(
-					Database.class,
-					"[getMySQLConnection] error while connecting to database : %s",
-					ex.getMessage());
+			Log.e(TAG, "[getMySQLConnection] error while connecting to database : %s", ex.getMessage());
 			conexion = null;
 		}
 		return conexion;
@@ -98,9 +96,9 @@ public class Database {
 		}
 		myConnection = getMySQLConnection(server, user, pass);
 		if (myConnection != null)
-			Log.debug(this.getClass(), "[connect] connected to database");
+			Log.d(TAG, "[connect] connected to database");
 		else
-			Log.error(this.getClass(), "[connect] could not provide connection");
+			Log.e(TAG, "[connect] could not provide connection");
 		return myConnection != null;
 	}
 
@@ -118,8 +116,7 @@ public class Database {
 
 	public Set<XmlLink> selectByLimit(boolean wantXml, int limit, int... flag) {
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[selectByLimit] database connection not established");
+			Log.e(TAG, "[selectByLimit] database connection not established");
 			return null;
 		}
 		long startTime = System.currentTimeMillis();
@@ -127,8 +124,7 @@ public class Database {
 		Set<XmlLink> xmlLinks = new HashSet<XmlLink>();
 		try {
 			stmt = myConnection.createStatement();
-			String query = "SELECT id, link, flag," + (wantXml ? " xml," : "")
-					+ " uuid FROM " + TABLE_NAME + " WHERE ";
+			String query = "SELECT id, link, flag," + (wantXml ? " xml," : "") + " uuid FROM " + TABLE_NAME + " WHERE ";
 			for (int i = 0; i < flag.length; i++)
 				query += "flag = " + flag[i] + " or ";
 			if (flag.length > 0)
@@ -137,28 +133,23 @@ public class Database {
 			ResultSet rs = stmt.executeQuery(query);
 			while (rs.next())
 				if (wantXml)
-					xmlLinks.add(new XmlLink(rs.getInt("id"), rs
-							.getString("link"), rs.getInt("flag"), rs
+					xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
 							.getString("xml"), rs.getString("uuid")));
 				else
-					xmlLinks.add(new XmlLink(rs.getInt("id"), rs
-							.getString("link"), rs.getInt("flag"), rs
+					xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
 							.getString("uuid")));
 			rs.close();
 			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		Log.debug(this.getClass(), "[selectByLimit] takes %f seconds",
-				(double) (System.currentTimeMillis() - startTime) / 1000);
+		Log.d(TAG, "[selectByLimit] takes %f seconds", (double) (System.currentTimeMillis() - startTime) / 1000);
 		return xmlLinks;
 	}
 
-	public Set<XmlLink> selectByUuids(boolean wantXml, Set<String> uuids,
-			int... flag) throws SQLException {
+	public Set<XmlLink> selectByUuids(boolean wantXml, Set<String> uuids, int... flag) throws SQLException {
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[selectByUuids] database connection not established");
+			Log.e(TAG, "[selectByUuids] database connection not established");
 			return null;
 		}
 		if (uuids.size() == 0)
@@ -169,8 +160,7 @@ public class Database {
 		String query = "";
 		try {
 			stmt = myConnection.createStatement();
-			query = "SELECT id, link, flag," + (wantXml ? " xml," : "")
-					+ " uuid FROM " + TABLE_NAME + " WHERE ";
+			query = "SELECT id, link, flag," + (wantXml ? " xml," : "") + " uuid FROM " + TABLE_NAME + " WHERE ";
 			for (int i = 0; i < flag.length; i++)
 				query += "flag = " + flag[i] + " or ";
 			if (flag.length > 0)
@@ -182,22 +172,19 @@ public class Database {
 			ResultSet rs = stmt.executeQuery(query);
 			while (rs.next())
 				if (wantXml)
-					xmlLinks.add(new XmlLink(rs.getInt("id"), rs
-							.getString("link"), rs.getInt("flag"), rs
+					xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
 							.getString("xml"), rs.getString("uuid")));
 				else
-					xmlLinks.add(new XmlLink(rs.getInt("id"), rs
-							.getString("link"), rs.getInt("flag"), rs
+					xmlLinks.add(new XmlLink(rs.getInt("id"), rs.getString("link"), rs.getInt("flag"), rs
 							.getString("uuid")));
 			rs.close();
 			stmt.close();
 		} catch (SQLException e) {
 			Utils.writeInfile("debug/query.sql", query);
-			Log.error(this.getClass(), "[selectByUuids] query saved");
+			Log.e(TAG, "[selectByUuids] query saved");
 			throw e;
 		}
-		Log.debug(this.getClass(), "[selectByUuids] takes %f seconds",
-				(double) (System.currentTimeMillis() - startTime) / 1000);
+		Log.d(TAG, "[selectByUuids] takes %f seconds", (double) (System.currentTimeMillis() - startTime) / 1000);
 		return xmlLinks;
 	}
 
@@ -205,8 +192,7 @@ public class Database {
 		if (links.size() == 0)
 			return 1;
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[insertLinks] database connection not established");
+			Log.e(TAG, "[insertLinks] database connection not established");
 			return 0;
 		}
 		long startTime = System.currentTimeMillis();
@@ -215,10 +201,8 @@ public class Database {
 			query += "('" + link + "'," + FLAG_ONLY_LINK + "),";
 		query = query.substring(0, query.length() - 1) + ";";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[insertLinks] takes %f seconds to insert %d links",
-					(double) (System.currentTimeMillis() - startTime) / 1000,
-					links.size());
+			Log.d(TAG, "[insertLinks] takes %f seconds to insert %d links",
+					(double) (System.currentTimeMillis() - startTime) / 1000, links.size());
 			return 1;
 		} else
 			return 0;
@@ -226,17 +210,14 @@ public class Database {
 
 	public int updateXml(XmlLink xmlLink) {
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[updateXml] database connection not established");
+			Log.e(TAG, "[updateXml] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET xml = '"
-				+ xmlLink.xml.replace("'", "''") + "' WHERE id = " + xmlLink.id
-				+ ";";
+		String query = "UPDATE " + TABLE_NAME + " SET xml = '" + xmlLink.xml.replace("'", "''") + "' WHERE id = "
+				+ xmlLink.id + ";";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[updateXml] takes %f seconds to update 1 xml",
+			Log.d(TAG, "[updateXml] takes %f seconds to update 1 xml",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
 			return 1;
 		} else
@@ -247,41 +228,33 @@ public class Database {
 		if (xmlLinks.size() == 0)
 			return 0;
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[updateXmls] database connection not established");
+			Log.e(TAG, "[updateXmls] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
 		int updateCount = 0;
 		for (XmlLink xmlLink : xmlLinks) {
-			String query = "UPDATE " + TABLE_NAME + " SET xml = '"
-					+ xmlLink.xml.replace("'", "''") + "' WHERE id = "
+			String query = "UPDATE " + TABLE_NAME + " SET xml = '" + xmlLink.xml.replace("'", "''") + "' WHERE id = "
 					+ xmlLink.id + ";";
 			if (tryUpdate(MAX_TRIES, query))
 				updateCount++;
 			else
-				Log.error(this.getClass(),
-						"[updateXmls] xml %d extraction failed", xmlLink.id);
+				Log.e(TAG, "[updateXmls] xml %d extraction failed", xmlLink.id);
 		}
-		Log.debug(this.getClass(),
-				"[updateXmls] takes %f seconds to update %d xmls",
-				(double) (System.currentTimeMillis() - startTime) / 1000,
-				xmlLinks.size());
+		Log.d(TAG, "[updateXmls] takes %f seconds to update %d xmls",
+				(double) (System.currentTimeMillis() - startTime) / 1000, xmlLinks.size());
 		return updateCount;
 	}
 
 	public int updateFlag(XmlLink xmlLink, int flag) {
 		if (myConnection == null) {
-			Log.error(this.getClass(),
-					"[updateFlag] database connection not established");
+			Log.e(TAG, "[updateFlag] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag
-				+ " WHERE id = '" + xmlLink.id + "';";
+		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE id = '" + xmlLink.id + "';";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[updateFlag] takes %f seconds to update 1 flag",
+			Log.d(TAG, "[updateFlag] takes %f seconds to update 1 flag",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
 			return 1;
 		} else
@@ -292,21 +265,17 @@ public class Database {
 		if (xmlLinks.size() == 0)
 			return 0;
 		if (myConnection == null) {
-			Log.warning(this.getClass(),
-					"[updateFlags] database connection not established");
+			Log.w(TAG, "[updateFlags] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag
-				+ " WHERE ";
+		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE ";
 		for (XmlLink xmlLink : xmlLinks)
 			query += "id = '" + xmlLink.id + "' or ";
 		query = query.substring(0, query.length() - 4) + ";";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[updateFlags] takes %f seconds to update %d flags",
-					(double) (System.currentTimeMillis() - startTime) / 1000,
-					xmlLinks.size());
+			Log.d(TAG, "[updateFlags] takes %f seconds to update %d flags",
+					(double) (System.currentTimeMillis() - startTime) / 1000, xmlLinks.size());
 			return 1;
 		} else
 			return -1;
@@ -314,16 +283,13 @@ public class Database {
 
 	public int updateUUID(XmlLink xmlLink) {
 		if (myConnection == null) {
-			Log.warning(this.getClass(),
-					"[updateUUID] database connection not established");
+			Log.w(TAG, "[updateUUID] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET uuid = " + xmlLink.uuid
-				+ " WHERE id = '" + xmlLink.id + "';";
+		String query = "UPDATE " + TABLE_NAME + " SET uuid = " + xmlLink.uuid + " WHERE id = '" + xmlLink.id + "';";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[updateUUID] takes %f seconds to update 1 UUID",
+			Log.d(TAG, "[updateUUID] takes %f seconds to update 1 UUID",
 					(double) (System.currentTimeMillis() - startTime) / 1000);
 			return 1;
 		} else
@@ -335,21 +301,17 @@ public class Database {
 		if (uuids.size() == 0)
 			return 0;
 		if (myConnection == null) {
-			Log.warning(this.getClass(),
-					"[updateFlagsByUUID] database connection not established");
+			Log.w(TAG, "[updateFlagsByUUID] database connection not established");
 			return -1;
 		}
 		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag
-				+ " WHERE ";
+		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE ";
 		for (String uuid : uuids)
 			query += "uuid = '" + uuid + "' or ";
 		query = query.substring(0, query.length() - 4) + ";";
 		if (tryUpdate(MAX_TRIES, query)) {
-			Log.debug(this.getClass(),
-					"[updateFlagsByUUID] takes %f seconds to update %d flags",
-					(double) (System.currentTimeMillis() - startTime) / 1000,
-					uuids.size());
+			Log.d(TAG, "[updateFlagsByUUID] takes %f seconds to update %d flags",
+					(double) (System.currentTimeMillis() - startTime) / 1000, uuids.size());
 			return 1;
 		} else
 			return -1;
@@ -362,20 +324,16 @@ public class Database {
 				st.executeUpdate(query);
 			} catch (com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException ex) {
 				numberOfInsertErrors++;
-				Log.error(this.getClass(),
-						"MySQLSyntaxErrorException, saved at query%03d.sql",
-						numberOfInsertErrors);
-				Utils.writeInfile(String.format("sql-queries/query%03d.sql",
-						numberOfInsertErrors), query);
+				Log.e(TAG, "MySQLSyntaxErrorException, saved at query%03d.sql", numberOfInsertErrors);
+				Utils.writeInfile(String.format("sql-queries/query%03d.sql", numberOfInsertErrors), query);
 			} catch (SQLException e) {
-				Log.warning(this.getClass(),
-						"[tryUpdate] failed, %d tries left", triesLeft - 1);
+				Log.w(TAG, "[tryUpdate] failed, %d tries left", triesLeft - 1);
 				connect();
 				tryUpdate(triesLeft - 1, query);
 			}
 			return true;
 		} else {
-			Log.error(this.getClass(), "[tryUpdate] failed so many times");
+			Log.e(TAG, "[tryUpdate] failed so many times");
 			return false;
 		}
 	}

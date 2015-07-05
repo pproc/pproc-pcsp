@@ -1,4 +1,4 @@
-package es.unizar.pproc;
+﻿package es.unizar.pproc;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 import com.hp.hpl.jena.rdf.model.Model;
 
 public class Utils {
+
+	public static final String TAG = Utils.class.getSimpleName();
 
 	public static String[] search(String regex, String onText) {
 		Pattern regPatt = Pattern.compile(regex);
@@ -40,7 +42,7 @@ public class Utils {
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
-		Log.info(Utils.class, "[writeModel] model written in %s", fileName);
+		Log.i(TAG, "[writeModel] model written in %s", fileName);
 	}
 
 	public static void writeInfile(String fileName, String writeThis) {
@@ -53,8 +55,7 @@ public class Utils {
 		}
 	}
 
-	public static String readFile(String path, Charset encoding)
-			throws IOException {
+	public static String readFile(String path, Charset encoding) throws IOException {
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
 		return new String(encoded, encoding);
 	}
