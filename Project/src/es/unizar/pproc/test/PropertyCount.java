@@ -1,4 +1,4 @@
-﻿package es.unizar.pproc.codice.test;
+﻿package es.unizar.pproc.test;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

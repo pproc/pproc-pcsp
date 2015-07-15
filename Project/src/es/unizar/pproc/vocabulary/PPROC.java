@@ -128,5 +128,6 @@ public class PPROC {
 	public static final Property additionalDocumentReference = property("additionalDocumentReference");
 	public static final Property location = property("location");
 	public static final Property lot = property("lot");
+	public static final Property awardDate = property("awardDate");
 
 }

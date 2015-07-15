@@ -243,11 +243,11 @@ public class Methods {
 	}
 
 	/**
-	 * Gets XML/CODICE links from http://contrataciondelestado.es/ and store
-	 * them in a database.
+	 * Gets XML/CODICE links from http://contrataciondelestado.es/ and store them in a database.
 	 * 
 	 * @author gesteban, danielrusa
 	 * @see es.unizar.pproc.codice.Database
+	 * @deprecated
 	 */
 	public static void getXmlLinks(Database database) throws IOException {
 
@@ -309,11 +309,11 @@ public class Methods {
 	}
 
 	/**
-	 * Download XML/CODICE files from http://contrataciondelestado.es/ and store
-	 * them in a database.
+	 * Download XML/CODICE files from http://contrataciondelestado.es/ and store them in a database.
 	 * 
 	 * @author gesteban, danielrusa
 	 * @see es.unizar.pproc.codice.Database
+	 * @deprecated
 	 */
 	public static void downloadXmls(Database database) throws FileNotFoundException, UnsupportedEncodingException,
 			InterruptedException {
@@ -343,15 +343,14 @@ public class Methods {
 	}
 
 	/**
-	 * Check the XML/CODICE files stored in a database to assure they are
-	 * correct, if some XML/CODICE is not correct, it's retrieved again using
-	 * the link stored in the database.
+	 * Check the XML/CODICE files stored in a database to assure they are correct, if some XML/CODICE is not correct,
+	 * it's retrieved again using the link stored in the database.
 	 * 
-	 * Is assumed that a CODICE XML is incorrect when SaxReader throws an
-	 * Exception.
+	 * Is assumed that a CODICE XML is incorrect when SaxReader throws an Exception.
 	 * 
 	 * @author gesteban
 	 * @see es.unizar.pproc.codice.Database
+	 * @deprecated
 	 */
 	public static void updateCorruptedXmls(Database database) throws InterruptedException, DocumentException {
 		int errorCount = 0;
@@ -397,12 +396,12 @@ public class Methods {
 	}
 
 	/**
-	 * Check the XML/CODICE files stored in a database and look for deprecated
-	 * documents, these being the XML/CODICE documents that have been replaced
-	 * for a new version with corrections.
+	 * Check the XML/CODICE files stored in a database and look for deprecated documents, these being the XML/CODICE
+	 * documents that have been replaced for a new version with corrections.
 	 * 
 	 * @author gesteban
 	 * @see es.unizar.pproc.codice.Database
+	 * @deprecated
 	 */
 	public static void checkDeprecatedXmls(Database database) throws InterruptedException, DocumentException {
 		Set<XmlLink> xmlLinks = database.selectByLimit(true, MAX_BUFFER_CHECK, Database.FLAG_UUID_UNCHECKED,
@@ -487,8 +486,7 @@ public class Methods {
 	}
 
 	/**
-	 * Transforms the XML/CODICE documents stored in a database into RDF
-	 * following PPROC ontology.
+	 * Transforms the XML/CODICE documents stored in a database into RDF following PPROC ontology.
 	 * 
 	 * @author gesteban
 	 */
@@ -536,25 +534,4 @@ public class Methods {
 		}
 	}
 
-	public static void main(String[] args) {
-		Log.setLevel(Log.INFO);
-		if (args.length != 3) {
-			Log.e(TAG, "need database parameters: database/table_URL username password");
-			return;
-		}
-
-		Database database = new Database(args[0], args[1], args[2]);
-		database.connect();
-		try {
-			// Methods.getXmlLinks(database);
-			// Methods.downloadXmls(database);
-			// Methods.updateCorruptedXmls(database);
-			// Methods.checkDeprecatedXmls(database);
-			Methods.parseXmls(database);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			database.disconnect();
-		}
-	}
 }

@@ -296,27 +296,6 @@ public class Database {
 			return -1;
 	}
 
-	@Deprecated
-	public int updateFlagsByUUID(Set<String> uuids, int flag) {
-		if (uuids.size() == 0)
-			return 0;
-		if (myConnection == null) {
-			Log.w(TAG, "[updateFlagsByUUID] database connection not established");
-			return -1;
-		}
-		long startTime = System.currentTimeMillis();
-		String query = "UPDATE " + TABLE_NAME + " SET flag = " + flag + " WHERE ";
-		for (String uuid : uuids)
-			query += "uuid = '" + uuid + "' or ";
-		query = query.substring(0, query.length() - 4) + ";";
-		if (tryUpdate(MAX_TRIES, query)) {
-			Log.d(TAG, "[updateFlagsByUUID] takes %f seconds to update %d flags",
-					(double) (System.currentTimeMillis() - startTime) / 1000, uuids.size());
-			return 1;
-		} else
-			return -1;
-	}
-
 	private boolean tryUpdate(int triesLeft, String query) {
 		if (triesLeft > 0) {
 			try {
