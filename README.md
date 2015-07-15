@@ -1,8 +1,8 @@
 pproc-pcsp
 ==========
+versión 2015 alpha
 
-Versión 2015.
-Alpha.
+**Crawler obsoleto desde los cambios de Julio de 2015 de la Plataforma de Contratación del Sector Público.**
 
 TODO
 - Documentación
@@ -12,6 +12,7 @@ TODO
 - Añadir anuncios
 - Comprobar fechas de adjudicación
 - CODICE 2.02?
+- Reescribir crawler?
 
 Proyecto realizado para el acceso y transformación de la información de contratos públicos disponible en la plataforma de contratación del estado de acuerdo con la ontología PPROC.
 
