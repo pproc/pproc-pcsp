@@ -1,5 +1,18 @@
 pproc-pcsp
 ==========
+versión 2015 alpha
+
+**Crawler obsoleto desde los cambios de Julio de 2015 de la Plataforma de Contratación del Sector Público.**
+
+TODO
+- Documentación
+  - % PPROC usado?
+  - % CODICE usado?
+- Independizar versión CODICE (https://contrataciondelestado.es/codice/cl/)
+- Añadir anuncios
+- Comprobar fechas de adjudicación
+- CODICE 2.02?
+- Reescribir crawler?
 
 **Crawler obsoleto desde los cambios de Julio de 2015 de la Plataforma de Contratación del Sector Público.**
 

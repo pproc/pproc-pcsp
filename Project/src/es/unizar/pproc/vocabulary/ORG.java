@@ -1,4 +1,4 @@
-package es.unizar.pproc.vocabulary;
+﻿package es.unizar.pproc.vocabulary;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
