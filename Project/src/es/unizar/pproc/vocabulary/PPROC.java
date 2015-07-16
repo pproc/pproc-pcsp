@@ -74,6 +74,9 @@ public class PPROC {
 	public static final Resource ContractResolution = resource("ContractResolution");
 	public static final Resource ProcedureResignation = resource("ProcedureResignation");
 	public static final Resource ProcedureWaive = resource("ProcedureWaive");
+	public static final Resource ContractWithLots = resource("ContractWithLots");
+	public static final Resource ContractWithoutLots = resource("ContractWithoutLots");
+	public static final Resource Lot = resource("Lot");
 
 	public static final Property delegatingAuthority = property("delegatingAuthority");
 	public static final Property contractTemporalConditions = property("contractTemporalConditions");
@@ -124,5 +127,6 @@ public class PPROC {
 	public static final Property technicalDocumentReference = property("technicalDocumentReference");
 	public static final Property additionalDocumentReference = property("additionalDocumentReference");
 	public static final Property location = property("location");
+	public static final Property lot = property("lot");
 
 }
