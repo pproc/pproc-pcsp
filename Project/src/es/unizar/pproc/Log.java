@@ -1,4 +1,4 @@
-package es.unizar.pproc;
+﻿package es.unizar.pproc;
 
 import java.util.Calendar;
 
@@ -21,35 +21,30 @@ public class Log {
 		message_priority = priority;
 	}
 
-	public static void error(Class<?> aClass, String message, Object... args) {
+	public static void e(String tag, String message, Object... args) {
 		if (message_priority <= ERROR)
-			System.err.printf(getNow() + " [ERROR] " + aClass.getSimpleName()
-					+ " : " + message + "\n", args);
+			System.err.printf(getNow() + " [ERROR] " + tag + " : " + message + "\n", args);
 	}
 
-	public static void warning(Class<?> aClass, String message, Object... args) {
+	public static void w(String tag, String message, Object... args) {
 		if (message_priority <= WARNING)
-			System.out.printf(getNow() + " [WARNING] " + aClass.getSimpleName()
-					+ " : " + message + "\n", args);
+			System.out.printf(getNow() + " [WARNING] " + tag + " : " + message + "\n", args);
 	}
 
-	public static void info(Class<?> aClass, String message, Object... args) {
+	public static void i(String tag, String message, Object... args) {
 		if (message_priority <= INFO)
-			System.out.printf(getNow() + " [INFO] " + aClass.getSimpleName()
-					+ " : " + message + "\n", args);
+			System.out.printf(getNow() + " [INFO] " + tag + " : " + message + "\n", args);
 	}
 
-	public static void debug(Class<?> aClass, String message, Object... args) {
+	public static void d(String tag, String message, Object... args) {
 		if (message_priority <= DEBUG)
-			System.out.printf(getNow() + " [DEBUG] " + aClass.getSimpleName()
-					+ " : " + message + "\n", args);
+			System.out.printf(getNow() + " [DEBUG] " + tag + " : " + message + "\n", args);
 	}
 
 	private static String getNow() {
 		Calendar rightNow = Calendar.getInstance();
-		return String.format("%02d:%02d:%02d",
-				rightNow.get(Calendar.HOUR_OF_DAY),
-				rightNow.get(Calendar.MINUTE), rightNow.get(Calendar.SECOND));
+		return String.format("%02d:%02d:%02d", rightNow.get(Calendar.HOUR_OF_DAY), rightNow.get(Calendar.MINUTE),
+				rightNow.get(Calendar.SECOND));
 	}
 
 }
